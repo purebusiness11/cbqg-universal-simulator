@@ -565,7 +565,7 @@ As localized saturation χ approaches 1, the reality manifold is **siphoned radi
         ship_radius = st.number_input("Ship Radius (m)", value=10.0, min_value=0.1, max_value=1000.0, step=0.5, format="%.1f")
 
         st.markdown("#### Transit Timeline")
-        transit_pct = st.slider("Transit Position — A (0%) → B (100%)", 0, 100, 0,
+        transit_pct = st.slider("Transit Position — A (0%) → B (100%)", 0, 100, 50,
                                 help="Slide to move the UAP craft from Point A to Point B along the chord path.")
 
         ON_THRESH = 0.96
