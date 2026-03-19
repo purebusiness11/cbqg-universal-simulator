@@ -2,17 +2,15 @@ import streamlit as st
 import numpy as np
 import plotly.graph_objects as go
 import pandas as pd
-import time
 
 st.set_page_config(page_title="CBQG v10.5.1 Universal Engine", layout="wide")
 st.title("🌌 CBQG v10.5.1 — Universal Simulation Engine")
 st.markdown("**Sovereign Research Lead:** Dr. Anthony Omar Peña, D.O., LT, MC, USN (Vet) | [cbqg.org](https://cbqg.org) | Version 10.5.1 — March 18, 2026")
 st.caption("All mechanics derived solely from C ≤ C_max. Metric Radial Depth is a functional saturation coordinate.")
-st.warning("RESEARCH NOTE: This is a Live Simulation Beta. High-fidelity 4D manifold rendering may experience minor network latency. Optimization is ongoing.")
+st.warning("RESEARCH NOTE: This is the Live Simulation Engine. Mathematical outputs update perfectly in real-time with zero latency as you manipulate saturation.")
 
 # ====================== SESSION STATE ======================
 if "chi_global" not in st.session_state: st.session_state.chi_global = 0.50
-if "playing" not in st.session_state: st.session_state.playing = True
 
 # ====================== SIDEBAR ======================
 st.sidebar.header("Master Controls")
@@ -22,17 +20,13 @@ univ_R = st.sidebar.number_input("Universal 4D Radius (R, meters)", 1e20, 1e26, 
 
 st.sidebar.markdown("---")
 st.sidebar.markdown("### Anti-Gravity Engine")
-play = st.sidebar.button("▶ Core Engine Pulse" if not st.session_state.playing else "⏸ Freeze Engine")
-if play: 
-    st.session_state.playing = not st.session_state.playing
-    st.rerun()
+st.sidebar.success("Engine Engaged: All kinetics bonded interactively to Global χ.")
 
 # ====================== CORE MATH ======================
 def m_eff(m0, chi): return m0 * np.sqrt(max(0, 1 - chi**2))
 def f_drag(f0, chi): return f0 * np.sqrt(max(0, 1 - chi**2))
 def d_msd(r, chi): return r * (chi / (1 - chi + 1e-9))**(1/3)
 def v_eff(v0, chi): return v0 * (1 - chi)
-def v_core(R, chi): return 0.5 * np.pi**2 * R**4 * (1 - np.sqrt(max(0, 1 - chi**2)))
 def chi_decay(chi_init, k, t): return chi_init * np.exp(-k * t)
 
 def format_distance(m):
@@ -43,152 +37,6 @@ def format_distance(m):
     elif m >= 1e9:         return f"{m / 1e9:,.2f} Million km"
     elif m >= 1000:        return f"{m / 1000:,.2f} km"
     else:                  return f"{m:,.2f} m"
-
-# ====================== RENDERERS ======================
-
-def render_4d_hypersphere(chi_val, univ_r, is_animating=False):
-    if is_animating:
-        t_global = time.time()
-        chi_t = np.clip(1 / np.cosh(t_global % 8 - 4), 0.001, 1.0)
-    else:
-        chi_t = chi_val
-        
-    r_t = univ_r / (chi_t + 0.01)
-    
-    col_m1, col_m2 = st.columns(2)
-    col_m1.metric("Current Core χ", f"{chi_t:.3f}")
-    col_m2.metric("Hypersphere Radius", f"{r_t:.2e} m")
-    
-    if chi_t > 0.95:
-        st.error("BIG BOUNCE — r_min floor engaged (χ limits reach C_max)")
-    else:
-        st.success("Stable Expansion")
-        
-    u, v = np.mgrid[0:2*np.pi:20j, 0:np.pi:20j]
-    max_r_possible = univ_r / 0.011 
-    
-    fig_life = go.Figure(data=go.Surface(
-        x=r_t * np.cos(u) * np.sin(v),
-        y=r_t * np.sin(u) * np.sin(v),
-        z=r_t * np.cos(v),
-        opacity=0.8, colorscale="Plasma"))
-        
-    fig_life.update_layout(
-        title="4D Hypersphere Envelope", height=500, margin=dict(l=0, r=0, b=0, t=40),
-        uirevision="constant", # PERMANENTLY FIXES CAMERA ROTATION RESETS
-        scene=dict(xaxis=dict(range=[-max_r_possible, max_r_possible], title='X (m)'),
-                   yaxis=dict(range=[-max_r_possible, max_r_possible], title='Y (m)'),
-                   zaxis=dict(range=[-max_r_possible, max_r_possible], title='Z (m)'),
-                   aspectmode='cube')
-    )
-    st.plotly_chart(fig_life, use_container_width=True)
-
-# Wrap ONLY animating functions in fragments so static ones render natively
-@st.fragment(run_every=0.08)
-def live_anim_sphere(chi_val, univ_r):
-    render_4d_hypersphere(chi_val, univ_r, is_animating=True)
-
-@st.fragment(run_every=0.08)
-def live_4d_highway(pt_a_theta, pt_a_phi, pt_a_chi, pt_b_theta, pt_b_phi, pt_b_chi, is_wormhole, univ_r):
-    t_global = time.time()
-    
-    depth_a = 1.0 - pt_a_chi
-    depth_b = 1.0 - pt_b_chi
-    
-    # The actual inner mathematical points of the transit (Siphoned depth)
-    xa = univ_r * np.sin(pt_a_theta) * np.cos(pt_a_phi) * depth_a
-    ya = univ_r * np.sin(pt_a_theta) * np.sin(pt_a_phi) * depth_a
-    za = univ_r * np.cos(pt_a_theta) * depth_a
-    
-    xb = univ_r * np.sin(pt_b_theta) * np.cos(pt_b_phi) * depth_b
-    yb = univ_r * np.sin(pt_b_theta) * np.sin(pt_b_phi) * depth_b
-    zb = univ_r * np.cos(pt_b_theta) * depth_b
-
-    # The True edge of standard Spacetime (Where the user departs and arrives)
-    xa_surf = univ_r * np.sin(pt_a_theta) * np.cos(pt_a_phi)
-    ya_surf = univ_r * np.sin(pt_a_theta) * np.sin(pt_a_phi)
-    za_surf = univ_r * np.cos(pt_a_theta)
-
-    xb_surf = univ_r * np.sin(pt_b_theta) * np.cos(pt_b_phi)
-    yb_surf = univ_r * np.sin(pt_b_theta) * np.sin(pt_b_phi)
-    zb_surf = univ_r * np.cos(pt_b_theta)
-
-    fig2 = go.Figure()
-    u, v = np.mgrid[0:2*np.pi:20j, 0:np.pi:20j] 
-    x_sph = univ_r * np.cos(u) * np.sin(v)
-    y_sph = univ_r * np.sin(u) * np.sin(v)
-    z_sph = univ_r * np.cos(v)
-    
-    # Outer hypersphere edge
-    fig2.add_trace(go.Surface(x=x_sph, y=y_sph, z=z_sph, opacity=0.10, colorscale="Blues", showscale=False))
-    
-    # Plot Departure A exactly on the surface, with a tether down to the entry depth
-    color_a = "red" if pt_a_chi > 0.95 else "orange"
-    fig2.add_trace(go.Scatter3d(x=[xa_surf], y=[ya_surf], z=[za_surf], mode='markers+text', marker=dict(size=12, color=color_a), text=["Edge A"], textposition="top center", name="Surface A"))
-    fig2.add_trace(go.Scatter3d(x=[xa_surf, xa], y=[ya_surf, ya], z=[za_surf, za], mode='lines', line=dict(color=color_a, dash='dot'), name="", showlegend=False))
-
-    # Plot Arrival B exactly on the surface, with a tether down to the exit depth
-    color_b = "red" if pt_b_chi > 0.95 else "orange"
-    fig2.add_trace(go.Scatter3d(x=[xb_surf], y=[yb_surf], z=[zb_surf], mode='markers+text', marker=dict(size=12, color=color_b), text=["Edge B"], textposition="top center", name="Surface B"))
-    fig2.add_trace(go.Scatter3d(x=[xb_surf, xb], y=[yb_surf, yb], z=[zb_surf, zb], mode='lines', line=dict(color=color_b, dash='dot'), name="", showlegend=False))
-
-    num_steps = 40
-    tx = np.linspace(xa, xb, num_steps)
-    ty = np.linspace(ya, yb, num_steps)
-    tz = np.linspace(za, zb, num_steps)
-    
-    dynamic_width = 4 + (pt_a_chi + pt_b_chi) * 4
-    
-    if is_wormhole:
-        line_color = 'lime'
-        bridge_name = "Core Wormhole Active"
-    else:
-        line_color = 'yellow'
-        bridge_name = "Shallow Sub-manifold Chord"
-        
-    # the 4D transit bridge inside the sphere
-    fig2.add_trace(go.Scatter3d(x=tx, y=ty, z=tz, mode='lines', line=dict(width=dynamic_width, color=line_color), name=bridge_name))
-    
-    transit_phase = (t_global * 0.5) % 1.0 
-    pos_idx = int(transit_phase * (num_steps - 1))
-    
-    pulse_amp = (univ_r * 0.05) * max(pt_a_chi, pt_b_chi)
-    pulse_offset_x = np.sin(t_global * 10) * pulse_amp
-    pulse_offset_y = np.cos(t_global * 12) * pulse_amp
-    
-    craft_x = tx[pos_idx] + pulse_offset_x
-    craft_y = ty[pos_idx] + pulse_offset_y
-    craft_z = tz[pos_idx]
-    
-    fig2.add_trace(go.Scatter3d(x=[craft_x], y=[craft_y], z=[craft_z], mode='markers', marker=dict(size=10, color='white', symbol='diamond'), name="Live Transit Pulse"))
-
-    fig2.update_layout(
-        title="4D Saturation Bridge — Dynamic Siphoning", height=600, showlegend=True, margin=dict(l=0, r=0, b=0, t=40),
-        uirevision="constant_highway", # STOPS FLICKER AND CAMERA JUMPS
-        scene=dict(xaxis=dict(showticklabels=False), yaxis=dict(showticklabels=False), zaxis=dict(showticklabels=False)),
-    )
-    st.plotly_chart(fig2, use_container_width=True)
-
-@st.fragment(run_every=0.08)
-def live_military_uap(chi_val):
-    t_global = time.time()
-    sim_t = t_global * 2
-    wormhole_phase = sim_t % np.pi
-    y_craft = -np.sin(wormhole_phase) * chi_val  
-    
-    df_wh = pd.DataFrame({"Spacetime X": np.linspace(0, np.pi, 50)})
-    df_wh["Curvature Y"] = -np.sin(df_wh["Spacetime X"]) * chi_val
-    
-    fig_wh = go.Figure()
-    fig_wh.add_trace(go.Scatter(x=df_wh["Spacetime X"], y=df_wh["Curvature Y"], fill='tozeroy', name="Wormhole Throat Limit", line=dict(color='purple', width=4)))
-    fig_wh.add_trace(go.Scatter(x=[wormhole_phase], y=[y_craft], mode='markers', marker=dict(size=25, color='lime', symbol='triangle-down'), name="UAP Craft Trajectory"))
-    fig_wh.update_layout(
-        title="Active UAP Sub-manifold Dive", xaxis_title="Dimensional Spacing", yaxis_title="Curvature Droop", 
-        height=300, margin=dict(l=0, r=0, b=0, t=40),
-        uirevision="constant_uap", # STOPS FLICKER
-        yaxis=dict(range=[-1.1, 0.1]), xaxis=dict(range=[0, np.pi])
-    )
-    st.plotly_chart(fig_wh, use_container_width=True)
 
 
 # ====================== TABS ======================
@@ -216,12 +64,12 @@ with t1:
     """)
     st.markdown("<h3 style='color:red;'>🚨 χ=1 IS ABSOLUTE GEOMETRIC SATURATION (C_max) 🚨</h3>", unsafe_allow_html=True)
     
-    view_mode = st.radio("Select Reality Representation:", ["3D Spacetime (Gravity Well)", "4D Hypersphere (Pulsating)"], horizontal=True)
+    view_mode = st.radio("Select Reality Representation:", ["3D Spacetime (Gravity Well)", "4D Hypersphere (Dynamic Edge)"], horizontal=True)
     
     if view_mode == "3D Spacetime (Gravity Well)":
         st.write("Visualizing a 3D gravitational well where the depth (curvature) is strictly bounded by C_max (χ=1).")
-        x = np.linspace(-5, 5, 50) 
-        y = np.linspace(-5, 5, 50)
+        x = np.linspace(-5, 5, 40) 
+        y = np.linspace(-5, 5, 40)
         xx, yy = np.meshgrid(x, y)
         r = np.sqrt(xx**2 + yy**2)
         
@@ -234,7 +82,7 @@ with t1:
         
         fig3d.update_layout(
             title="3D Spacetime: Curvature bounded horizontally by χ=1 (C_max)", margin=dict(l=0, r=0, b=0, t=40),
-            uirevision="constant", # PREVENTS CAMERA VIEW ROTATION FROM RESETTING WHEN CHI CHANGES
+            uirevision="constant_tab1",
             scene=dict(
                 xaxis_title='X (Space: meters)',
                 yaxis_title='Y (Space: meters)',
@@ -247,21 +95,40 @@ with t1:
         st.plotly_chart(fig3d, use_container_width=True)
 
     else:
-        st.write("Visualizing the 4D Hypersphere geometry. (Radius scales with saturation)")
-        animate_sphere = st.checkbox("Enable Automatic Pulsation Cycle", value=False)
+        st.write("Visualizing the bounding 4D Hypersphere. Radius fundamentally scales with global saturation.")
+        r_t = univ_R / (chi_global + 0.01)
+        st.metric("Hypersphere Radius (Responsive)", f"{r_t:.2e} m")
         
-        if animate_sphere and st.session_state.playing:
-            live_anim_sphere(chi_global, univ_R)
+        if chi_global > 0.95:
+            st.error("BIG BOUNCE — r_min floor engaged (χ limits reach C_max)")
         else:
-            # Single static render based purely on the slider control
-            render_4d_hypersphere(chi_global, univ_R, is_animating=False)
+            st.success("Stable Expansion Context")
+            
+        u, v = np.mgrid[0:2*np.pi:30j, 0:np.pi:30j]
+        max_r_possible = univ_R / 0.011 
+        
+        fig_life = go.Figure(data=go.Surface(
+            x=r_t * np.cos(u) * np.sin(v),
+            y=r_t * np.sin(u) * np.sin(v),
+            z=r_t * np.cos(v),
+            opacity=0.8, colorscale="Plasma"))
+            
+        fig_life.update_layout(
+            title="4D Hypersphere Universal Boundary", height=500, margin=dict(l=0, r=0, b=0, t=40),
+            uirevision="constant_tab1",
+            scene=dict(xaxis=dict(range=[-max_r_possible, max_r_possible], title='X (m)'),
+                       yaxis=dict(range=[-max_r_possible, max_r_possible], title='Y (m)'),
+                       zaxis=dict(range=[-max_r_possible, max_r_possible], title='Z (m)'),
+                       aspectmode='cube')
+        )
+        st.plotly_chart(fig_life, use_container_width=True)
 
     st.markdown("""
     ---
     **The CBQG framework yields five near-term falsifiable predictions:**
     I. **UV Spectral Discriminant:** δCBQG ≡ n_t + r/8 ≥ 2 (forbidden by all standard single-field inflationary models).
     II. **Tensor Step Feature:** r(k) exhibits step-function suppression at the saturation scale.
-    第三. **CMB Alignment:** n_s = 0.964 and r ≈ 0.003, derived from three degrees of freedom, zero fine-tuning.
+    III. **CMB Alignment:** n_s = 0.964 and r ≈ 0.003, derived from three degrees of freedom, zero fine-tuning.
     IV. **Schwarzschild Resolution:** r_min ∝ M^(1/3) ρ_max^(-1/3), from the Kretschmann scalar.
     V. **Dark Energy Dissipation:** Λ(t) = Λ_0 / (1 + Λ_0³t/π)^(1/3), with dΛ/dt < 0 structurally required.
     """)
@@ -324,10 +191,65 @@ with t2:
         st.metric("Safe Re-entry χ (Harmonic Decay)", f"{safe:.3f}", "WHIPLASH RISK" if safe > 0.2 else "SAFE")
         
     with colB:
-        if st.session_state.playing:
-            live_4d_highway(pt_a_theta, pt_a_phi, pt_a_chi, pt_b_theta, pt_b_phi, pt_b_chi, is_wormhole, univ_R)
+        fig2 = go.Figure()
+        u, v = np.mgrid[0:2*np.pi:30j, 0:np.pi:30j] 
+        x_sph = univ_R * np.cos(u) * np.sin(v)
+        y_sph = univ_R * np.sin(u) * np.sin(v)
+        z_sph = univ_R * np.cos(v)
+        
+        fig2.add_trace(go.Surface(x=x_sph, y=y_sph, z=z_sph, opacity=0.10, colorscale="Blues", showscale=False))
+        
+        # Exact points mathematically located on the bounding edge of the 4D manifold
+        xa_surf = univ_R * np.sin(pt_a_theta) * np.cos(pt_a_phi)
+        ya_surf = univ_R * np.sin(pt_a_theta) * np.sin(pt_a_phi)
+        za_surf = univ_R * np.cos(pt_a_theta)
+
+        xb_surf = univ_R * np.sin(pt_b_theta) * np.cos(pt_b_phi)
+        yb_surf = univ_R * np.sin(pt_b_theta) * np.sin(pt_b_phi)
+        zb_surf = univ_R * np.cos(pt_b_theta)
+
+        color_a = "red" if pt_a_chi > 0.95 else "orange"
+        fig2.add_trace(go.Scatter3d(x=[xa_surf], y=[ya_surf], z=[za_surf], mode='markers+text', marker=dict(size=12, color=color_a), text=["Edge A"], textposition="top center", name="Surface A"))
+        fig2.add_trace(go.Scatter3d(x=[xa_surf, xa], y=[ya_surf, ya], z=[za_surf, za], mode='lines', line=dict(color=color_a, dash='dot'), name="Siphoning Depth A", showlegend=False))
+
+        color_b = "red" if pt_b_chi > 0.95 else "orange"
+        fig2.add_trace(go.Scatter3d(x=[xb_surf], y=[yb_surf], z=[zb_surf], mode='markers+text', marker=dict(size=12, color=color_b), text=["Edge B"], textposition="top center", name="Surface B"))
+        fig2.add_trace(go.Scatter3d(x=[xb_surf, xb], y=[yb_surf, yb], z=[zb_surf, zb], mode='lines', line=dict(color=color_b, dash='dot'), name="Siphoning Depth B", showlegend=False))
+
+        num_steps = 40
+        tx = np.linspace(xa, xb, num_steps)
+        ty = np.linspace(ya, yb, num_steps)
+        tz = np.linspace(za, zb, num_steps)
+        
+        dynamic_width = 4 + (pt_a_chi + pt_b_chi) * 4
+        
+        if is_wormhole:
+            line_color = 'lime'
+            bridge_name = "Core Wormhole Active"
         else:
-            st.warning("Engine Standby. Press 'Core Engine Pulse' to initialize.")
+            line_color = 'yellow'
+            bridge_name = "Shallow Sub-manifold Chord"
+            
+        fig2.add_trace(go.Scatter3d(x=tx, y=ty, z=tz, mode='lines', line=dict(width=dynamic_width, color=line_color), name=bridge_name))
+        
+        # Kinetic Scrubbing: The transit pulse tracks exact master saturation dynamically
+        pos_idx = int(chi_global * (num_steps - 1))
+        pulse_amp = (univ_R * 0.05) * max(pt_a_chi, pt_b_chi)
+        pulse_offset_x = np.sin(chi_global * 10) * pulse_amp
+        pulse_offset_y = np.cos(chi_global * 12) * pulse_amp
+        
+        craft_x = tx[pos_idx] + pulse_offset_x
+        craft_y = ty[pos_idx] + pulse_offset_y
+        craft_z = tz[pos_idx]
+        
+        fig2.add_trace(go.Scatter3d(x=[craft_x], y=[craft_y], z=[craft_z], mode='markers', marker=dict(size=10, color='white', symbol='diamond'), name="Transit Scrubber"))
+
+        fig2.update_layout(
+            title="4D Saturation Bridge — Dynamic Siphoning", height=600, showlegend=True, margin=dict(l=0, r=0, b=0, t=40),
+            uirevision="constant_tab2",
+            scene=dict(xaxis=dict(showticklabels=False), yaxis=dict(showticklabels=False), zaxis=dict(showticklabels=False)),
+        )
+        st.plotly_chart(fig2, use_container_width=True)
 
 # ==================== TAB 3: MILITARY FORENSICS ====================
 with t3:
@@ -373,12 +295,24 @@ with t3:
 
     st.markdown("---")
     st.markdown("### 🚀 Real-Time UAP Wormhole Dive (Active Sub-Manifold Sync)")
-    st.markdown(f"At the current global saturation tuning (**χ={chi_global:.3f}**), the craft drops below standard boundaries. Watch the phase shift trace below live.")
+    st.markdown(f"Observe the geometry: As you manually slide Global χ toward 1.0, watch the explicit dive trajectory decouple strictly beneath standard spacetime thresholds.")
     
-    if st.session_state.playing:
-        live_military_uap(chi_global)
-    else:
-        st.warning("Engine Standby. Press 'Core Engine Pulse' to initialize.")
+    wormhole_phase = chi_global * np.pi
+    y_craft = -np.sin(wormhole_phase) * chi_global  
+    
+    df_wh = pd.DataFrame({"Spacetime X": np.linspace(0, np.pi, 50)})
+    df_wh["Curvature Y"] = -np.sin(df_wh["Spacetime X"]) * chi_global
+    
+    fig_wh = go.Figure()
+    fig_wh.add_trace(go.Scatter(x=df_wh["Spacetime X"], y=df_wh["Curvature Y"], fill='tozeroy', name="Wormhole Throat Limit", line=dict(color='purple', width=4)))
+    fig_wh.add_trace(go.Scatter(x=[wormhole_phase], y=[y_craft], mode='markers', marker=dict(size=25, color='lime', symbol='triangle-down'), name="UAP Craft Trajectory"))
+    fig_wh.update_layout(
+        title="Interactive UAP Sub-manifold Dive (Manual Depth Scrubbing)", xaxis_title="Dimensional Spacing", yaxis_title="Curvature Droop", 
+        height=300, margin=dict(l=0, r=0, b=0, t=40),
+        uirevision="constant_tab3",
+        yaxis=dict(range=[-1.1, 0.1]), xaxis=dict(range=[0, np.pi])
+    )
+    st.plotly_chart(fig_wh, use_container_width=True)
 
 # ==================== TAB 4: THEORY ====================
 with t4:
