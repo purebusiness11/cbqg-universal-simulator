@@ -8,6 +8,7 @@ st.set_page_config(page_title="CBQG v10.5.1 Universal Engine", layout="wide")
 st.title("🌌 CBQG v10.5.1 — Universal Simulation Engine")
 st.markdown("**Sovereign Research Lead:** Dr. Anthony Omar Peña, D.O., LT, MC, USN (Vet) | [cbqg.org](https://cbqg.org) | Version 10.5.1 — March 18, 2026")
 st.caption("All mechanics derived solely from C ≤ C_max. Metric Radial Depth is a functional saturation coordinate.")
+st.warning("RESEARCH NOTE: This is a Live Simulation Beta. High-fidelity 4D manifold rendering may experience latency depending on local GPU resources. Optimization is ongoing.")
 
 # ====================== SESSION STATE ======================
 if "chi_global" not in st.session_state: st.session_state.chi_global = 0.50
@@ -60,7 +61,7 @@ def live_cosmic_engine(chi_val, univ_r):
     else:
         st.success("Stable Expansion")
         
-    u, v = np.mgrid[0:2*np.pi:30j, 0:np.pi:30j] # Optimized background density
+    u, v = np.mgrid[0:2*np.pi:20j, 0:np.pi:20j] # Ultra-optimized background density
     max_r_possible = univ_r / 0.011 
     
     fig_life = go.Figure(data=go.Surface(
@@ -92,7 +93,7 @@ def live_4d_highway(pt_a_theta, pt_a_phi, pt_a_chi, pt_b_theta, pt_b_phi, pt_b_c
     zb = univ_r * np.cos(pt_b_theta) * depth_b
 
     fig2 = go.Figure()
-    u, v = np.mgrid[0:2*np.pi:30j, 0:np.pi:30j] # Optimized density
+    u, v = np.mgrid[0:2*np.pi:20j, 0:np.pi:20j] # Ultra-optimized density
     x_sph = univ_r * np.cos(u) * np.sin(v)
     y_sph = univ_r * np.sin(u) * np.sin(v)
     z_sph = univ_r * np.cos(v)
@@ -192,7 +193,7 @@ with t1:
     
     if view_mode == "3D Spacetime (Gravity Well)":
         st.write("Visualizing a 3D gravitational well where the depth (curvature) is strictly bounded by C_max (χ=1).")
-        x = np.linspace(-5, 5, 50) # High-density manifold
+        x = np.linspace(-5, 5, 50) 
         y = np.linspace(-5, 5, 50)
         xx, yy = np.meshgrid(x, y)
         r = np.sqrt(xx**2 + yy**2)
@@ -351,38 +352,43 @@ with t3:
 
 # ==================== TAB 4: THEORY ====================
 with t4:
-    st.subheader("Core Axioms (Plain Text) & Explanations")
+    st.subheader("Theory & Axioms")
+    auth_input = st.text_input("Researcher Access Code", type="password")
     
-    st.markdown("### 1. Metric Saturation Invariant (χ)")
-    st.code("χ = C / C_max ≤ 1")
-    st.markdown("**Explanation:** The foundational bedrock of the universe. Spacetime curvature (C) cannot exceed a maximum absolute capacity (C_max). χ simply tracks what percentage of that capacity is currently exhausted.")
-    
-    st.markdown("### 2. Effective Mass Negation (m_eff)")
-    st.code("m_eff = m_0 √(1 - χ²)")
-    st.markdown("**Explanation:** As a craft saturates the vacuum matrix around its hull (χ → 1), its inertial connection to the universe evaporates to absolute zero, permitting infinite velocity vectors with zero force.")
+    if auth_input == "YourSecretCode":
+        st.write("Full CBQG Derivations Unlocked.")
+        st.markdown("### 1. Metric Saturation Invariant (χ)")
+        st.code("χ = C / C_max ≤ 1")
+        st.markdown("**Explanation:** The foundational bedrock of the universe. Spacetime curvature (C) cannot exceed a maximum absolute capacity (C_max). χ simply tracks what percentage of that capacity is currently exhausted.")
+        
+        st.markdown("### 2. Effective Mass Negation (m_eff)")
+        st.code("m_eff = m_0 √(1 - χ²)")
+        st.markdown("**Explanation:** As a craft saturates the vacuum matrix around its hull (χ → 1), its inertial connection to the universe evaporates to absolute zero, permitting infinite velocity vectors with zero force.")
 
-    st.markdown("### 3. Aerodynamic Drag Suppression (F_drag)")
-    st.code("F_drag = F_0 √(1 - χ²)")
-    st.markdown("**Explanation:** As inertia disappears, so does standard fluid interaction. The atmosphere doesn't compress—it slides harmlessly around the saturated boundaries of the hull, instantly stopping sonic booms and super-heating friction.")
+        st.markdown("### 3. Aerodynamic Drag Suppression (F_drag)")
+        st.code("F_drag = F_0 √(1 - χ²)")
+        st.markdown("**Explanation:** As inertia disappears, so does standard fluid interaction. The atmosphere doesn't compress—it slides harmlessly around the saturated boundaries of the hull, instantly stopping sonic booms and super-heating friction.")
 
-    st.markdown("### 4. Minimum Standoff Distance (D_msd)")
-    st.code("D_msd = R [χ / (1 - χ)]^(1/3)")
-    st.markdown("**Explanation:** Standard mass (like military jets) breaking into this minimum spatial radius risks bleeding off the saturated energy. A severe kinetic repulsion barrier forms as χ scales upward.")
+        st.markdown("### 4. Minimum Standoff Distance (D_msd)")
+        st.code("D_msd = R [χ / (1 - χ)]^(1/3)")
+        st.markdown("**Explanation:** Standard mass (like military jets) breaking into this minimum spatial radius risks bleeding off the saturated energy. A severe kinetic repulsion barrier forms as χ scales upward.")
 
-    st.markdown("### 5. Electromagnetic Damping (V_eff)")
-    st.code("V_eff = V_0 (1 - χ)")
-    st.markdown("**Explanation:** Passing electrons fail to jump the vacuum gap. As saturation peaks, the local impedance scales up, bleeding active voltage out of surrounding electronics and shutting them down gracefully.")
+        st.markdown("### 5. Electromagnetic Damping (V_eff)")
+        st.code("V_eff = V_0 (1 - χ)")
+        st.markdown("**Explanation:** Passing electrons fail to jump the vacuum gap. As saturation peaks, the local impedance scales up, bleeding active voltage out of surrounding electronics and shutting them down gracefully.")
 
-    st.markdown("### 6. 4D Highway Volume (V_core)")
-    st.code("V_core = 0.5 π² R⁴ (1 - √(1 - χ²))")
-    st.markdown("**Explanation:** Defines exactly what fractional volume of the inner 4D hypersphere is safely traversable by highly saturated fleets simultaneously without crossing phase lanes.")
+        st.markdown("### 6. 4D Highway Volume (V_core)")
+        st.code("V_core = 0.5 π² R⁴ (1 - √(1 - χ²))")
+        st.markdown("**Explanation:** Defines exactly what fractional volume of the inner 4D hypersphere is safely traversable by highly saturated fleets simultaneously without crossing phase lanes.")
 
-    st.markdown("### 7. Harmonic Re-entry Decay (χ_t)")
-    st.code("χ(t) = χ_init e^(-kt)")
-    st.markdown("**Explanation:** Dumping saturation from 1 to 0 instantly would kill the crew via \"Whiplash\" as their full infinite inertia slammed back onto them. Modulating decay over a safe envelope k acts as inertial shock absorbers.")
-    
-    st.markdown("### 8. Wormhole Chord Distance (L)")
-    st.code("L = √(Σ(Δxi)² + (Δw)²)")
-    st.markdown("**Explanation:** L calculates the true 4D interior mathematical shortcut where w = R * χ. Proves the wormhole shortcut mechanism isn't a metaphor—it's a Pythagorean identity mapping the 4D manifold.")
+        st.markdown("### 7. Harmonic Re-entry Decay (χ_t)")
+        st.code("χ(t) = χ_init e^(-kt)")
+        st.markdown("**Explanation:** Dumping saturation from 1 to 0 instantly would kill the crew via \"Whiplash\" as their full infinite inertia slammed back onto them. Modulating decay over a safe envelope k acts as inertial shock absorbers.")
+        
+        st.markdown("### 8. Wormhole Chord Distance (L)")
+        st.code("L = √(Σ(Δxi)² + (Δw)²)")
+        st.markdown("**Explanation:** L calculates the true 4D interior mathematical shortcut where w = R * χ. Proves the wormhole shortcut mechanism isn't a metaphor—it's a Pythagorean identity mapping the 4D manifold.")
+    else:
+        st.info("Public Axioms only. Enter code for full metric derivations.") 
 
 st.caption("CBQG v10.5.1 © Dr. Anthony Omar Peña, D.O. — All rights reserved.")
