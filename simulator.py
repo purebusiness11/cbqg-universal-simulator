@@ -598,11 +598,39 @@ As localized saturation χ approaches 1, the reality manifold is **siphoned radi
         chord_dist = np.sqrt((xa-xb)**2+(ya-yb)**2+(za-zb)**2+(wa-wb)**2)
         dist_saved = surface_dist - chord_dist
 
-        # Transit fraction and craft position
+        # Transit fraction and craft position along FULL path:
+        # surface A → interior A → interior B → surface B
         t_frac = transit_pct / 100.0
-        craft_x = xa + (xb-xa)*t_frac
-        craft_y = ya + (yb-ya)*t_frac
-        craft_z = za + (zb-za)*t_frac
+
+        # 3D segment lengths for path weighting
+        seg1_len = np.sqrt((xa-xa_surf)**2 + (ya-ya_surf)**2 + (za-za_surf)**2)  # descent into A
+        seg2_len = np.sqrt((xb-xa)**2 + (yb-ya)**2 + (zb-za)**2)                 # interior chord
+        seg3_len = np.sqrt((xb_surf-xb)**2 + (yb_surf-yb)**2 + (zb_surf-zb)**2) # ascent out of B
+        total_path_len = seg1_len + seg2_len + seg3_len + EPS
+
+        # Fractional breakpoints along [0,1]
+        f1 = seg1_len / total_path_len   # end of descent
+        f2 = (seg1_len + seg2_len) / total_path_len  # end of chord
+
+        if t_frac <= f1:
+            # Descending from surface A into interior A
+            local = t_frac / (f1 + EPS)
+            craft_x = xa_surf + (xa - xa_surf)*local
+            craft_y = ya_surf + (ya - ya_surf)*local
+            craft_z = za_surf + (za - za_surf)*local
+        elif t_frac <= f2:
+            # Traveling interior chord A → B
+            local = (t_frac - f1) / (f2 - f1 + EPS)
+            craft_x = xa + (xb - xa)*local
+            craft_y = ya + (yb - ya)*local
+            craft_z = za + (zb - za)*local
+        else:
+            # Ascending from interior B to surface B
+            local = (t_frac - f2) / (1.0 - f2 + EPS)
+            craft_x = xb + (xb_surf - xb)*local
+            craft_y = yb + (yb_surf - yb)*local
+            craft_z = zb + (zb_surf - zb)*local
+
         chi_at_pos = pt_a_chi + (pt_b_chi - pt_a_chi)*t_frac
 
         # Heuristic transit velocity and time
@@ -668,7 +696,16 @@ As localized saturation χ approaches 1, the reality manifold is **siphoned radi
                                     mode='lines', line=dict(color=cb,dash='dot',width=3), showlegend=False))
 
         num_steps = 60
-        tx = np.linspace(xa,xb,num_steps); ty = np.linspace(ya,yb,num_steps); tz = np.linspace(za,zb,num_steps)
+        # Full path: surface A → interior A → interior B → surface B
+        # Build by concatenating the three segments
+        def seg_pts(p0, p1, n):
+            return np.linspace(p0, p1, n)
+        n1 = max(2, int(num_steps * seg1_len / (total_path_len + EPS)))
+        n2 = max(2, int(num_steps * seg2_len / (total_path_len + EPS)))
+        n3 = max(2, num_steps - n1 - n2)
+        tx = np.concatenate([seg_pts(xa_surf,xa,n1), seg_pts(xa,xb,n2)[1:], seg_pts(xb,xb_surf,n3)[1:]])
+        ty = np.concatenate([seg_pts(ya_surf,ya,n1), seg_pts(ya,yb,n2)[1:], seg_pts(yb,yb_surf,n3)[1:]])
+        tz = np.concatenate([seg_pts(za_surf,za,n1), seg_pts(za,zb,n2)[1:], seg_pts(zb,zb_surf,n3)[1:]])
         fig2.add_trace(go.Scatter3d(x=tx,y=ty,z=tz, mode='lines',
                                     line=dict(width=5, color='lime' if is_wormhole else 'yellow'),
                                     name="Core Wormhole" if is_wormhole else "Shallow Chord"))
