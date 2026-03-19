@@ -3,7 +3,6 @@ import numpy as np
 import plotly.graph_objects as go
 import pandas as pd
 import time
-import uuid
 
 st.set_page_config(page_title="CBQG v10.5.1 Universal Engine", layout="wide")
 
@@ -15,13 +14,12 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 st.title("🌌 CBQG v10.5.1 — Universal Simulation Engine")
-st.markdown("**Sovereign Research Lead:** Dr. Anthony Omar Peña, D.O., LT, MC, USN (Vet) | https://cbqg.org | Version 10.5.1 — March 18, 2026")
+st.markdown("**Sovereign Research Lead:** Dr. Anthony Omar Peña, D.O., LT, MC, USN (Vet) | [cbqg.org](https://cbqg.org) | Version 10.5.1 — March 18, 2026")
 st.caption("All mechanics derived solely from C ≤ C_max. Metric Radial Depth is a functional saturation coordinate.")
 
 # ====================== SESSION STATE & CAMERA MATRICES ======================
 if "chi_global" not in st.session_state: st.session_state.chi_global = 0.50
 if "wh_active" not in st.session_state: st.session_state.wh_active = False
-if "life_run_id" not in st.session_state: st.session_state.life_run_id = "static"   # used for unique animation keys
 
 if "cam_t1_gw" not in st.session_state: st.session_state.cam_t1_gw = dict(eye=dict(x=1.5, y=1.5, z=1.5))
 if "cam_t1_sph" not in st.session_state: st.session_state.cam_t1_sph = dict(eye=dict(x=1.5, y=1.5, z=1.5))
@@ -44,7 +42,7 @@ st.sidebar.markdown("---")
 st.sidebar.success("Engine Engaged: All kinetics bonded interactively to Global χ.")
 
 # ====================== CBQG THEORETICAL CORE (PURE MATH) ======================
-# Appendix B-faithful equations (ε = 1e-9 included where specified). [3](https://discuss.streamlit.io/t/streamlitduplicateelementid-error-with-plotly-charts-in-a-while-true-loop/92083)
+# Appendix B-faithful equations (ε = 1e-9 included where specified). [1](https://onedrive.live.com/?id=c0fe8902-fb01-4f0e-a450-51f8682d5cf7&cid=add893de30e38c77&web=1)
 EPS = 1e-9
 
 def clamp_chi(chi): 
@@ -71,7 +69,7 @@ def chi_decay(chi_init, k, t):
 
 def v_eff(v0, chi):
     c = clamp_chi(chi)
-    return v0 * (1.0 - c)  # Strictly linear per Appendix B. [3](https://discuss.streamlit.io/t/streamlitduplicateelementid-error-with-plotly-charts-in-a-while-true-loop/92083)
+    return v0 * (1.0 - c)  # Strictly linear per Appendix B. [1](https://onedrive.live.com/?id=c0fe8902-fb01-4f0e-a450-51f8682d5cf7&cid=add893de30e38c77&web=1)
 
 # ====================== VISUALIZATION HEURISTICS ======================
 def format_distance(m):
@@ -108,7 +106,7 @@ Infinite information density cannot exist within any finite region of spacetime.
 
 Alongside the invariant speed of light (c) and the quantum of action (h-bar), formalized by the Geometric Saturation Invariant **χ = C/C_max**, where **C = √(R_abcd R^abcd)** is the invariant curvature magnitude, the square root of the Kretschmann scalar.
 """)
-    st.info("⚠️ **Structural Engine Disclaimer:** True CBQG incorporates the covariant evolution of the R_abcd tensor field. In this real-time simulator, χ compresses the 4D saturation magnitude into a master 1D scalar to visually drive macroscopic reactions.")
+    st.info("⚠️ **Structural Engine Disclaimer:** True CBQG incorporates the covariant evolution of the $R_{abcd}$ tensor field. In this real-time simulator, χ compresses the 4D saturation magnitude into a master 1D scalar to visually drive macroscopic reactions.")
     st.markdown("<h3 style='color:red;'>🚨 χ=1 IS ABSOLUTE GEOMETRIC SATURATION (C_max) 🚨</h3>", unsafe_allow_html=True)
 
     view_mode = st.radio("Select Reality Representation:", ["3D Spacetime (Gravity Well)", "4D Hypersphere (Dynamic Edge)"], horizontal=True)
@@ -147,6 +145,12 @@ Alongside the invariant speed of light (c) and the quantum of action (h-bar), fo
                 yaxis_title='Y Space (m)',
                 zaxis_title='Z (Curvature Depth χ)',
                 zaxis=dict(range=[-4, 0]),
+                annotations=[dict(
+                    showarrow=False, x=0, y=0, z=-3.0,
+                    text="GEOMETRIC FLOOR (C_max)",
+                    xanchor="center",
+                    font=dict(color="red", size=14)
+                )]
             )
         )
         st.plotly_chart(fig3d, use_container_width=True, key="gravity_well_plot")
@@ -173,7 +177,7 @@ Alongside the invariant speed of light (c) and the quantum of action (h-bar), fo
         max_bound = univ_R * 1.1
         sphere_container = st.empty()
 
-        def draw_sphere(chi_target, is_anim=False, frame_idx=0):
+        def draw_sphere(chi_target, is_anim=False):
             c_targ = clamp_chi(chi_target)
             if scale_mode == "Physical (Nonlinear Metric Compression)":
                 rad = univ_R * np.sqrt(max(0.0, 1.0 - c_targ**2))
@@ -200,19 +204,13 @@ Alongside the invariant speed of light (c) and the quantum of action (h-bar), fo
                     aspectmode='cube'
                 )
             )
-
-            # Robust: unique per click + per frame (prevents DuplicateElementKey across reruns). [1](https://outlook.live.com/owa/?ItemID=AQMkADAwATM3ZmYAZS04YmYyLTRkNWYtMDACLTAwCgBGAAADLh9XQf4JHESs7XkMcUbmcQcA10r0VXRlx0q2fp4fk5LSkwAAAgEPAAAA10r0VXRlx0q2fp4fk5LSkwAAApgiAAAA&exvsurl=1&viewmodel=ReadMessageItem)[2](https://outlook.live.com/owa/?ItemID=AQMkADAwATM3ZmYAZS04YmYyLTRkNWYtMDACLTAwCgBGAAADLh9XQf4JHESs7XkMcUbmcQcA10r0VXRlx0q2fp4fk5LSkwAAAgEMAAAA10r0VXRlx0q2fp4fk5LSkwAC8uWGrAAAAA%3d%3d&exvsurl=1&viewmodel=ReadMessageItem)
-            if is_anim:
-                k = f"sph_{st.session_state.life_run_id}_{frame_idx}"
-            else:
-                k = "sph_static_main"
-            sphere_container.plotly_chart(fig_life, use_container_width=True, key=k)
+            # The 'key' argument is completely removed here to allow duplicate frame rendering without crashing.
+            sphere_container.plotly_chart(fig_life, use_container_width=True)
 
         if st.button("▶ Simulate Universal Life Cycle", key="btn_life"):
-            st.session_state.life_run_id = uuid.uuid4().hex
             st.info("Running geometric expansion/contraction sequence...")
-            for i, chi_step in enumerate(np.linspace(chi_global, 0.01, 20)):
-                draw_sphere(float(chi_step), is_anim=True, frame_idx=i)
+            for chi_step in np.linspace(chi_global, 0.01, 20):
+                draw_sphere(chi_step, is_anim=True)
                 time.sleep(0.04)
             draw_sphere(chi_global, is_anim=False)
             st.session_state.chi_global = chi_global
@@ -238,18 +236,21 @@ with t2:
     with colA:
         pt_a_theta = st.slider("Point A Theta (Latitude 0 to π)", 0.0, float(np.pi), float(np.pi/4))
         pt_a_phi = st.slider("Point A Phi (Longitude 0 to 2π)", 0.0, float(2*np.pi), 0.0)
-        pt_a_chi = st.slider("Point A Saturation χ", 0.000, 1.000, 0.800, 0.001, format="%.3f")
+        pt_a_chi = st.slider("Point A Saturation χ", 0.0, 1.0, 0.8)
 
         st.markdown("---")
         pt_b_theta = st.slider("Point B Theta (Latitude 0 to π)", 0.0, float(np.pi), float(3*np.pi/4))
         pt_b_phi = st.slider("Point B Phi (Longitude 0 to 2π)", 0.0, float(2*np.pi), float(np.pi))
-        pt_b_chi = st.slider("Point B Saturation χ", 0.000, 1.000, 0.800, 0.001, format="%.3f")
+        pt_b_chi = st.slider("Point B Saturation χ", 0.0, 1.0, 0.8)
 
         st.markdown("### 🎚️ Transit Position")
         transit_pct = st.slider("Transit Timeline Scrubber (%)", 0, 100, 50)
 
         ON_THRESH = 0.96  # visualization heuristic only
-        st.session_state.wh_active = (pt_a_chi > ON_THRESH and pt_b_chi > ON_THRESH)
+        if pt_a_chi > ON_THRESH and pt_b_chi > ON_THRESH:
+            st.session_state.wh_active = True
+        else:
+            st.session_state.wh_active = False
         is_wormhole = st.session_state.wh_active
 
         if is_wormhole:
@@ -308,21 +309,36 @@ with t2:
         zb_surf = univ_R * cos_b_th
 
         color_a = "red" if pt_a_chi > 0.95 else "orange"
+        fig2.add_trace(go.Scatter3d(
+            x=[xa_surf], y=[ya_surf], z=[za_surf],
+            mode='markers+text',
+            marker=dict(size=12, color=color_a),
+            text=["Edge A"], textposition="top center",
+            name="Surface A"
+        ))
+        fig2.add_trace(go.Scatter3d(
+            x=[xa_surf, xa], y=[ya_surf, ya], z=[za_surf, za],
+            mode='lines',
+            line=dict(color=color_a, dash='dot'),
+            name="Siphoning Depth A",
+            showlegend=False
+        ))
+
         color_b = "red" if pt_b_chi > 0.95 else "orange"
-
-        fig2.add_trace(go.Scatter3d(x=[xa_surf], y=[ya_surf], z=[za_surf],
-                                    mode='markers+text', marker=dict(size=12, color=color_a),
-                                    text=["Edge A"], textposition="top center", name="Surface A"))
-        fig2.add_trace(go.Scatter3d(x=[xa_surf, xa], y=[ya_surf, ya], z=[za_surf, za],
-                                    mode='lines', line=dict(color=color_a, dash='dot'),
-                                    name="Siphoning Depth A", showlegend=False))
-
-        fig2.add_trace(go.Scatter3d(x=[xb_surf], y=[yb_surf], z=[zb_surf],
-                                    mode='markers+text', marker=dict(size=12, color=color_b),
-                                    text=["Edge B"], textposition="top center", name="Surface B"))
-        fig2.add_trace(go.Scatter3d(x=[xb_surf, xb], y=[yb_surf, yb], z=[zb_surf, zb],
-                                    mode='lines', line=dict(color=color_b, dash='dot'),
-                                    name="Siphoning Depth B", showlegend=False))
+        fig2.add_trace(go.Scatter3d(
+            x=[xb_surf], y=[yb_surf], z=[zb_surf],
+            mode='markers+text',
+            marker=dict(size=12, color=color_b),
+            text=["Edge B"], textposition="top center",
+            name="Surface B"
+        ))
+        fig2.add_trace(go.Scatter3d(
+            x=[xb_surf, xb], y=[yb_surf, yb], z=[zb_surf, zb],
+            mode='lines',
+            line=dict(color=color_b, dash='dot'),
+            name="Siphoning Depth B",
+            showlegend=False
+        ))
 
         num_steps = 40
         tx = np.linspace(xa, xb, num_steps)
@@ -331,13 +347,20 @@ with t2:
 
         line_color = 'lime' if is_wormhole else 'yellow'
         bridge_name = "Core Wormhole" if is_wormhole else "Shallow Chord"
-        fig2.add_trace(go.Scatter3d(x=tx, y=ty, z=tz, mode='lines',
-                                    line=dict(width=6, color=line_color), name=bridge_name))
+        fig2.add_trace(go.Scatter3d(
+            x=tx, y=ty, z=tz,
+            mode='lines',
+            line=dict(width=6, color=line_color),
+            name=bridge_name
+        ))
 
         pos_idx = int((transit_pct / 100.0) * (num_steps - 1))
-        fig2.add_trace(go.Scatter3d(x=[tx[pos_idx]], y=[ty[pos_idx]], z=[tz[pos_idx]],
-                                    mode='markers', marker=dict(size=10, color='white', symbol='diamond'),
-                                    name="Transit Craft"))
+        fig2.add_trace(go.Scatter3d(
+            x=[tx[pos_idx]], y=[ty[pos_idx]], z=[tz[pos_idx]],
+            mode='markers',
+            marker=dict(size=10, color='white', symbol='diamond'),
+            name="Transit Craft"
+        ))
 
         fig2.update_layout(
             title="4D Saturation Bridge", height=600, showlegend=True,
@@ -368,10 +391,10 @@ with t2:
 # ==================== TAB 3: MILITARY FORENSICS ====================
 with t3:
     st.subheader("Addendum B: Military UAP Sensor Correlation")
-    st.warning("⚠️ SPECULATIVE ENGINEERING: Heuristic reverse-engineering overlay. (Math core is Appendix-B forms.) [3](https://discuss.streamlit.io/t/streamlitduplicateelementid-error-with-plotly-charts-in-a-while-true-loop/92083)")
+    st.warning("⚠️ SPECULATIVE ENGINEERING: The following applies CBQG heuristic physics to reverse-engineer reported UAP kinematics. This is mathematically rigorous to the theory, but strictly speculative in real-world attribution.")
 
     st.markdown("""
-When radar systems track anomalous craft, they report kinematics irreconcilable with General Relativity. Under CBQG, if a craft accumulates localized spacetime geometrically tight to its hull limit (χ → 1), acceleration increases without bound under finite force (via m_eff → 0), enabling interior chord transit.
+When radar systems track anomalous craft, they report kinematics irreconcilable with General Relativity. Under CBQG, if a craft accumulates localized spacetime geometrically tight to its hull limit (χ → 1), **acceleration increases without bound under finite force (via m_eff → 0)**. This severs its inertial coupling from classical reality, allowing it to safely execute a **4D interior chord transit** completely uninhibited by mass barriers.
 """)
 
     st.markdown("### 📡 Scenario Modeler")
@@ -403,44 +426,43 @@ When radar systems track anomalous craft, they report kinematics irreconcilable 
 
     with col1:
         st.markdown("### 1. Instantaneous Acceleration")
+        st.markdown("**USS Princeton, 2004 - AN/SPY-1 Analog**")
         m_e = m_eff(m0, active_chi)
-        st.write(f"m_eff = {m_e:,.2f} kg")
-        st.progress(max(0.0, min(1.0, 1.0 - m_e / (m0 + EPS))))
+        st.markdown(
+            f"**m_eff = {m0:,.0f} × √(1 - {active_chi}²) = <span style='color:lime'>{m_e:,.1f} kg</span>**",
+            unsafe_allow_html=True
+        )
+        st.progress(max(0.0, min(1.0, 1.0 - m_e/m0)))
         a_test = 10000.0 / (m_e + EPS)
-        st.info(f"Apparent radial acceleration proxy: {a_test:,.0f} m/s² under nominal 10kN thrust (illustrative).")
+        st.info(f"**Sensor Track 1:** Apparent radial acceleration proxy: {a_test:,.0f} m/s² under nominal 10kN thrust (illustrative).")
 
         st.markdown("### 3. Minimum Standoff (Mirroring)")
+        st.markdown("**Nimitz & Roosevelt Encounters**")
         d_m = d_msd(R_craft, active_chi)
-        st.write(f"D_msd = {d_m:,.2f} m (ε = 10⁻⁹)")
+        st.markdown(
+            f"**D_msd = {R_craft} × [{active_chi} / (1 - {active_chi} + ε)]^(1/3) = <span style='color:lime'>{d_m:,.1f} m</span>**",
+            unsafe_allow_html=True
+        )
 
     with col2:
         st.markdown("### 2. No Sonic Boom")
+        st.markdown("**Nimitz, 2004 - Commander Fravor Analog**")
         f_d = f_drag(drag_base, active_chi)
-        st.write(f"F_drag = {f_d:,.2f} N")
-        st.progress(max(0.0, min(1.0, 1.0 - f_d / (drag_base + EPS))))
+        st.markdown(
+            f"**F_drag = {drag_base} × √(1 - {active_chi}²) = <span style='color:lime'>{f_d:,.1f} N</span>**",
+            unsafe_allow_html=True
+        )
+        st.progress(max(0.0, min(1.0, 1.0 - f_d/drag_base)))
 
         st.markdown("### 4. Electromagnetic Damping")
+        st.markdown("**Malmstrom AFB, 1967 Analog**")
         v_e = v_eff(V_electronics, active_chi)
-        st.write(f"V_eff = {v_e:,.2f} V")
+        st.markdown(
+            f"**V_eff = {V_electronics} × (1 - {active_chi}) = <span style='color:red'>{v_e:,.2f} V</span>**",
+            unsafe_allow_html=True
+        )
         if active_chi > 0.90:
-            st.error("Critical voltage collapse threshold crossed (heuristic narrative).")
-
-    st.markdown("---")
-    st.markdown("### 🛸 UAP Sensor Trajectory Analysis (Heuristic Mapping)")
-
-    fig3 = go.Figure()
-    time_arr = np.linspace(0, 10, 100)
-    fig3.add_trace(go.Scatter(x=time_arr, y=np.exp(time_arr*0.1), name="Conventional UAP", line=dict(color='white', dash='dot')))
-    traj = [0]*10 + [100]*80 + [0]*10
-    fig3.add_trace(go.Scatter(x=time_arr, y=traj, name="CBQG Transit Envelope (χ → 1)", line=dict(color='lime', width=4)))
-    fig3.update_layout(
-        title="Apparent Radar Velocity / Acceleration Discontinuity",
-        height=300,
-        margin=dict(l=0,r=0,b=0,t=40),
-        xaxis_title="Seconds",
-        yaxis_title="Apparent Kinematics"
-    )
-    st.plotly_chart(fig3, use_container_width=True, key="uap_transit_plot_restored")
+            st.error("**System Log:** Critical voltage collapse detected. Avionics/Warhead logic circuits failing (heuristic narrative).")
 
     st.markdown("---")
     st.markdown("### ☄️ Re-entry Protocol Simulator")
@@ -448,11 +470,12 @@ When radar systems track anomalous craft, they report kinematics irreconcilable 
 
     colR1, colR2 = st.columns(2)
     with colR1:
-        sim_k = st.slider("Re-entry Damping Factor (k)", 0.1, 15.0, 3.0, 0.1, key="k_slider")
-        st.info("χ(t) = χ_init e^(-kt) (Appendix-B form).")
+        sim_k = st.slider("Re-entry Damping Factor (k)", 0.1, 15.0, 3.0, 0.1)
+        st.info("A rapid saturation drop (high k) reconnects inertia quickly; slower decay buffers the inertial wave (heuristic operational note).")
     with colR2:
-        peak_g = 50.0 * sim_k * active_chi
+        peak_g = 50.0 * sim_k * active_chi  # heuristic proxy for d(chi)/dt shock
         st.metric("Peak Inertial Whiplash", f"{peak_g:.1f} Gs")
+        st.caption("Heuristic proxy for theoretical structural shear; order-of-magnitude estimate only.")
         if peak_g > 50:
             st.error("🚨 STRUCTURAL FAILURE: G-force exceeds 50G airframe limit.")
         elif active_chi <= 0.05:
@@ -463,25 +486,58 @@ When radar systems track anomalous craft, they report kinematics irreconcilable 
         t_arr = np.linspace(0, 5, 50)
         chi_t = chi_decay(active_chi, sim_k, t_arr)
         fig_re = go.Figure(go.Scatter(x=t_arr, y=chi_t, fill='tozeroy', marker=dict(color='orange')))
-        fig_re.update_layout(title="Phase Decay Profile", height=200, margin=dict(l=0, r=0, b=0, t=30),
-                             yaxis_title="χ(t)", xaxis_title="Seconds")
+        fig_re.update_layout(
+            title="Phase Decay Profile",
+            height=200,
+            margin=dict(l=0, r=0, b=0, t=30),
+            yaxis_title="χ(t)",
+            xaxis_title="Seconds"
+        )
         st.plotly_chart(fig_re, use_container_width=True, key="reentry_chart")
 
 # ==================== TAB 4: THEORY ====================
 with t4:
     st.subheader("Theory & Axioms")
+
     st.markdown("### 0. The Unified Scalar Simplification (Engine Constraint)")
-    st.markdown("CBQG is covariant-tensor in full form; this simulator compresses it into a master χ control for visualization.")
-    st.markdown("### 1–9. Appendix B Equation Set")
+    st.markdown("**Explanation:** True CBQG is a covariant tensor formulation driven by the invariant curvature limits of $R_{abcd}R^{abcd}$. For this browser-based simulator, the tensor field is simplified into a single master scalar UI control (χ). Consequently, χ acts pedagogically across multiple dependent axes as curvature magnitude, spatial depth coordinate, and mass modifier simultaneously.")
+
+    st.markdown("### 1. Metric Saturation Invariant (χ)")
     st.code("χ = C / C_max ≤ 1")
+    st.markdown("**Explanation:** Spacetime curvature (C) cannot exceed a maximum absolute capacity (C_max). χ tracks what percentage of that capacity is exhausted.")
+
+    st.markdown("### 2. Effective Mass Negation (m_eff)")
     st.code("m_eff = m_0 √(1 - χ²)")
+    st.markdown("**Explanation:** Saturated vacuum reduces inertial coupling (m_eff → 0 as χ → 1).")
+
+    st.markdown("### 3. Aerodynamic Drag Suppression (F_drag)")
     st.code("F_drag = F_0 √(1 - χ²)")
-    st.code("D_msd = R [χ / (1 - χ + ε)]^(1/3)   with ε = 10⁻⁹")
+    st.markdown("**Explanation:** Standard fluid interactions reduce as coupling drops, suppressing shock/drag in this model.")
+
+    st.markdown("### 4. Minimum Standoff Distance (D_msd)")
+    st.code("D_msd = R [χ / (1 - χ + ε)]^(1/3)")
+    st.markdown("**Explanation:** Saturation boundaries create an interaction buffer; ε = 10⁻⁹ prevents singular divergence at χ = 1.")
+
+    st.markdown("### 5. Electromagnetic Damping (V_eff)")
     st.code("V_eff = V_0 (1 - χ)")
+    st.markdown("**Explanation:** Vacuum impedance increases with χ; voltage conduction drops linearly in the Appendix-B form.")
+
+    st.markdown("### 6. 4D Highway Volume (V_core)")
     st.code("V_core = 0.5 π² R⁴ (1 - √(1 - χ²))")
+    st.markdown("**Explanation:** Quantifies usable 4D interior volume accessible via saturation-dependent chord transit.")
+
+    st.markdown("### 7. Harmonic Re-entry Decay (χ_t)")
     st.code("χ(t) = χ_init e^(-kt)")
+    st.markdown("**Explanation:** Exponential decay models controlled desaturation to mitigate whiplash on re-entry.")
+
+    st.markdown("### 8. Metric Radial Depth Coordinate (w)")
     st.code("w = R * χ")
+    st.markdown("**Explanation:** Functional coordinate mapping saturation depth into the metric radial axis.")
+
+    st.markdown("### 9. Wormhole Chord Distance (L)")
     st.code("L = √(Σ(Δxi)² + (Δw)²)")
+    st.markdown("**Explanation:** Scalar chord distance including Δw (functional saturation depth axis).")
 
 st.caption("CBQG v10.5.1 © Dr. Anthony Omar Peña, D.O. — All rights reserved.")
+
 
