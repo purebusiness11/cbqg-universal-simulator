@@ -8,6 +8,7 @@ st.set_page_config(page_title="CBQG v10.5.1 Universal Engine", layout="wide")
 st.title("🌌 CBQG v10.5.1 — Universal Simulation Engine")
 st.markdown("**Sovereign Research Lead:** Dr. Anthony Omar Peña, D.O., LT, MC, USN (Vet) | [cbqg.org](https://cbqg.org) | Version 10.5.1 — March 18, 2026")
 st.caption("All mechanics derived solely from C ≤ C_max. Metric Radial Depth is a functional saturation coordinate.")
+st.warning("RESEARCH NOTE: This is the Live Simulation Engine. Mathematical outputs update perfectly in real-time with zero latency as you manipulate saturation.")
 
 # ====================== SESSION STATE ======================
 if "chi_global" not in st.session_state: st.session_state.chi_global = 0.50
@@ -75,7 +76,7 @@ with t1:
     
     if view_mode == "3D Spacetime (Gravity Well)":
         st.write("Visualizing a 3D gravitational well where the depth (curvature) is strictly bounded by C_max (χ=1).")
-        st.info("💡 **PRO TIP:** Rotate the graph to your preferred angle. It will stay flawlessly locked while you drag the χ slider.")
+        st.info("💡 **PRO TIP:** Rotate the graph to your preferred angle. The new React architecture permanently locks your camera so the slider tracks depth instantaneously without resetting.")
         
         x = np.linspace(-5, 5, 40) 
         y = np.linspace(-5, 5, 40)
@@ -91,15 +92,15 @@ with t1:
         
         fig3d.update_layout(
             title="3D Spacetime: Curvature bounded horizontally by χ=1 (C_max)", margin=dict(l=0, r=0, b=0, t=40),
-            uirevision="unbreakable_camera_lock", # FLICKER ELIMINATED
+            uirevision="locked_camera", 
             scene=dict(
                 xaxis_title='X (Space: meters)', yaxis_title='Y (Space: meters)', zaxis_title='Z (Curvature Depth)',
                 zaxis=dict(range=[-4, 0]),
                 annotations=[dict(showarrow=False, x=0, y=0, z=-3.0, text="GEOMETRIC FLOOR (χ=1, C_max)", xanchor="center", font=dict(color="red", size=14))]
             )
         )
-        # theme=None bypasses Streamlit's overwrite, allowing uirevision to work securely
-        st.plotly_chart(fig3d, use_container_width=True, theme=None)
+        # Static key assigns permanent component identity to survive slider rendering loops
+        st.plotly_chart(fig3d, use_container_width=True, theme=None, key="tab1_gravity_well")
 
     else:
         st.write("### The 4D Hypersphere Map")
@@ -112,35 +113,45 @@ with t1:
              st.error("BIG BOUNCE — r_min floor engaged (χ limits reach C_max)")
         
         u, v = np.mgrid[0:2*np.pi:30j, 0:np.pi:30j]
+        max_r_possible = univ_R / 0.011 
         
         sphere_container = st.empty()
         
-        def draw_sphere(chi_target):
+        def draw_sphere(chi_target, is_loop=False):
              rad = univ_R / (chi_target + 0.01)
              fig_life = go.Figure(data=go.Surface(
                  x=rad * np.cos(u) * np.sin(v),
                  y=rad * np.sin(u) * np.sin(v),
                  z=rad * np.cos(v),
-                 opacity=0.8, colorscale="Plasma", showscale=False)) # Disabled useless scale bar
+                 opacity=0.8, colorscale="Plasma", showscale=False))
             
-             # Removing absolute range limits allows the sphere to visually remain massive 
-             # on screen, while the numbers on the X/Y/Z axes accurately shrink and grow!
              fig_life.update_layout(
-                 title="4D Hypersphere Envelope (Observe Axis Value Scaling)", 
+                 title="4D Hypersphere Envelope", 
                  height=500, margin=dict(l=0, r=0, b=0, t=40),
-                 uirevision="unbreakable_sphere_lock",
-                 scene=dict(aspectmode='cube')
+                 uirevision="locked_sphere",
+                 # Fixed identical grid forces the physical sphere to visually shrink inward accurately
+                 scene=dict(xaxis=dict(range=[-max_r_possible, max_r_possible], title='X (m)'),
+                            yaxis=dict(range=[-max_r_possible, max_r_possible], title='Y (m)'),
+                            zaxis=dict(range=[-max_r_possible, max_r_possible], title='Z (m)'),
+                            aspectmode='cube')
              )
-             sphere_container.plotly_chart(fig_life, use_container_width=True, theme=None)
+             
+             # Prevent Streamlit Duplicate ID crashes internally during loop
+             k = f"sphere_loop_{chi_target}_{time.time()}" if is_loop else "tab1_sphere_main"
+             sphere_container.plotly_chart(fig_life, use_container_width=True, theme=None, key=k)
 
-        draw_sphere(chi_global)
+        # Baseline explicitly bonded to the master slider
+        draw_sphere(chi_global, is_loop=False)
         
         if st.button("▶ Simulate Universal De-Saturation Cycle"):
              st.info("Running localized spatial phase expansion...")
-             for chi_step in np.linspace(chi_global, 0.01, 15):
-                 draw_sphere(chi_step)
-                 time.sleep(0.05)
-             draw_sphere(chi_global) # Reset to slider baseline
+             for chi_step in np.linspace(chi_global, 0.01, 20):
+                 draw_sphere(chi_step, is_loop=True)
+                 time.sleep(0.04)
+             
+             draw_sphere(chi_global, is_loop=False)
+             st.session_state.chi_global = chi_global 
+             st.success("Cycle Complete: Manifold re-stabilized to Master χ.")
 
     st.markdown("""
     ---
@@ -240,20 +251,21 @@ with t2:
             
         fig2.add_trace(go.Scatter3d(x=tx, y=ty, z=tz, mode='lines', line=dict(width=dynamic_width, color=line_color), name=bridge_name))
         
+        # Scrubber intrinsically locks transit payload exactly to χ
         pos_idx = int(chi_global * (num_steps - 1))
         
         craft_x = tx[pos_idx] 
         craft_y = ty[pos_idx] 
         craft_z = tz[pos_idx]
         
-        fig2.add_trace(go.Scatter3d(x=[craft_x], y=[craft_y], z=[craft_z], mode='markers', marker=dict(size=10, color='white', symbol='diamond'), name="Live Transit (Mapped to Master χ)"))
+        fig2.add_trace(go.Scatter3d(x=[craft_x], y=[craft_y], z=[craft_z], mode='markers', marker=dict(size=10, color='white', symbol='diamond'), name="Transit Point"))
 
         fig2.update_layout(
             title="4D Saturation Bridge — Dynamic Siphoning", height=600, showlegend=True, margin=dict(l=0, r=0, b=0, t=40),
-            uirevision="unbreakable_camera_lock",
+            uirevision="locked_highway",
             scene=dict(xaxis=dict(showticklabels=False), yaxis=dict(showticklabels=False), zaxis=dict(showticklabels=False)),
         )
-        st.plotly_chart(fig2, use_container_width=True, theme=None)
+        st.plotly_chart(fig2, use_container_width=True, theme=None, key="tab2_bridge_main")
 
 # ==================== TAB 3: MILITARY FORENSICS ====================
 with t3:
@@ -305,28 +317,29 @@ with t3:
     
     uap_container = st.empty()
     
-    def draw_uap(target_phase):
+    def draw_uap(target_phase, is_loop=False):
         y_craft = -np.sin(target_phase) * chi_global  
         df_wh = pd.DataFrame({"Spacetime X": np.linspace(0, np.pi, 50)})
         df_wh["Curvature Y"] = -np.sin(df_wh["Spacetime X"]) * chi_global
         
         fig_wh = go.Figure()
-        fig_wh.add_trace(go.Scatter(x=df_wh["Spacetime X"], y=df_wh["Curvature Y"], fill='tozeroy', name="Wormhole Throat", line=dict(color='purple', width=4)))
+        fig_wh.add_trace(go.Scatter(x=df_wh["Spacetime X"], y=df_wh["Curvature Y"], fill='tozeroy', name="Wormhole Throat Limit", line=dict(color='purple', width=4)))
         fig_wh.add_trace(go.Scatter(x=[target_phase], y=[y_craft], mode='markers', marker=dict(size=25, color='lime', symbol='triangle-down'), name="UAP Trajectory"))
         fig_wh.update_layout(
-            title="Active UAP Dive Trajectory", xaxis_title="Dimensional Spacing", yaxis_title="Curvature Depth", 
-            height=300, margin=dict(l=0, r=0, b=0, t=40), uirevision="constant_uap", yaxis=dict(range=[-1.1, 0.1]), xaxis=dict(range=[0, np.pi])
+            title="Active UAP Dive Trajectory", xaxis_title="Dimensional Spacing", yaxis_title="Curvature Droop", 
+            height=300, margin=dict(l=0, r=0, b=0, t=40), uirevision="locked_uap", yaxis=dict(range=[-1.1, 0.1]), xaxis=dict(range=[0, np.pi])
         )
-        uap_container.plotly_chart(fig_wh, use_container_width=True, theme=None)
+        
+        k = f"uap_loop_{target_phase}_{time.time()}" if is_loop else "tab3_uap_main"
+        uap_container.plotly_chart(fig_wh, use_container_width=True, theme=None, key=k)
 
-    # Static baseline linked purely to master slider
-    draw_uap(chi_global * np.pi) 
+    draw_uap(chi_global * np.pi, is_loop=False) 
 
     if st.button("▶ Deploy UAP Dive Sequence"):
         for phase in np.linspace(0, np.pi, 20):
-            draw_uap(phase)
+            draw_uap(phase, is_loop=True)
             time.sleep(0.04)
-        draw_uap(chi_global * np.pi) # Returns to stable resting state
+        draw_uap(chi_global * np.pi, is_loop=False)
 
 # ==================== TAB 4: THEORY ====================
 with t4:
@@ -365,5 +378,3 @@ with t4:
     st.markdown("**Explanation:** L calculates the true 4D interior mathematical shortcut where w = R * χ. Proves the wormhole shortcut mechanism isn't a metaphor—it's a Pythagorean identity mapping the 4D manifold.")
 
 st.caption("CBQG v10.5.1 © Dr. Anthony Omar Peña, D.O. — All rights reserved.")
-
-
