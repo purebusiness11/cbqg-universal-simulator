@@ -204,8 +204,9 @@ Alongside the invariant speed of light (c) and the quantum of action (h-bar), fo
                     aspectmode='cube'
                 )
             )
-            # The 'key' argument is completely removed here to allow duplicate frame rendering without crashing.
-            sphere_container.plotly_chart(fig_life, use_container_width=True)
+            # Injecting a mathematically unique key forces Streamlit to render the frame instead of ignoring it
+            k = f"sph_anim_{time.time()}_{c_targ}" if is_anim else "sph_static_main"
+            sphere_container.plotly_chart(fig_life, use_container_width=True, key=k)
 
         if st.button("▶ Simulate Universal Life Cycle", key="btn_life"):
             st.info("Running geometric expansion/contraction sequence...")
@@ -236,12 +237,12 @@ with t2:
     with colA:
         pt_a_theta = st.slider("Point A Theta (Latitude 0 to π)", 0.0, float(np.pi), float(np.pi/4))
         pt_a_phi = st.slider("Point A Phi (Longitude 0 to 2π)", 0.0, float(2*np.pi), 0.0)
-        pt_a_chi = st.slider("Point A Saturation χ", 0.0, 1.0, 0.8)
+        pt_a_chi = st.slider("Point A Saturation χ", 0.000, 1.000, 0.800, 0.001, format="%.3f")
 
         st.markdown("---")
         pt_b_theta = st.slider("Point B Theta (Latitude 0 to π)", 0.0, float(np.pi), float(3*np.pi/4))
         pt_b_phi = st.slider("Point B Phi (Longitude 0 to 2π)", 0.0, float(2*np.pi), float(np.pi))
-        pt_b_chi = st.slider("Point B Saturation χ", 0.0, 1.0, 0.8)
+        pt_b_chi = st.slider("Point B Saturation χ", 0.000, 1.000, 0.800, 0.001, format="%.3f")
 
         st.markdown("### 🎚️ Transit Position")
         transit_pct = st.slider("Transit Timeline Scrubber (%)", 0, 100, 50)
@@ -463,6 +464,28 @@ When radar systems track anomalous craft, they report kinematics irreconcilable 
         )
         if active_chi > 0.90:
             st.error("**System Log:** Critical voltage collapse detected. Avionics/Warhead logic circuits failing (heuristic narrative).")
+
+    st.markdown("---")
+    
+    st.markdown("### 🛸 UAP Sensor Trajectory Analysis (Heuristic Mapping)")
+    fig3 = go.Figure()
+    time_arr = np.linspace(0, 10, 100)
+    
+    # Normal craft
+    fig3.add_trace(go.Scatter(x=time_arr, y=np.exp(time_arr*0.1), name="Conventional UAP", line=dict(color='white', dash='dot')))
+    
+    # CBQG Sub-manifold traverse
+    traj = [0]*10 + [100]*80 + [0]*10
+    fig3.add_trace(go.Scatter(x=time_arr, y=traj, name="CBQG Transit Envelope (χ → 1)", line=dict(color='lime', width=4)))
+    
+    fig3.update_layout(
+        title="Apparent Radar Velocity / Acceleration Discontinuity", 
+        height=300, 
+        margin=dict(l=0,r=0,b=0,t=40), 
+        xaxis_title="Seconds", 
+        yaxis_title="Apparent Kinematics"
+    )
+    st.plotly_chart(fig3, use_container_width=True, key="uap_transit_plot_restored")
 
     st.markdown("---")
     st.markdown("### ☄️ Re-entry Protocol Simulator")
