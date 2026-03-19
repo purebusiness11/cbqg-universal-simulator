@@ -5,7 +5,7 @@
 
 Official Python implementation of the **Curvature-Bounded Quantum Gravity (CBQG)** framework. This engine simulates a 4D cyclic hypersphere where all kinematics are derived from a single sovereign invariant: **C ≤ C_max**.
 
-**Verification (SHA-256):** `78d4a97f6c3a812e564d2b9101f3e8c9a2d4b7e1f6c3a812e564d2b9101f3e8c`
+**Verification (SHA-256):** `6611e185ad521b56bcb585db86b4cae78531fb01ad32fe6f3193763c2b817df5`
 
 ---
 
