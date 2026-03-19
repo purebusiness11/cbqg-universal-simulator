@@ -204,8 +204,8 @@ Alongside the invariant speed of light (c) and the quantum of action (h-bar), fo
                     aspectmode='cube'
                 )
             )
-            key_val = "sph_anim" if is_anim else "sph_static_main"
-            sphere_container.plotly_chart(fig_life, use_container_width=True, key=key_val)
+            # The 'key' argument is completely removed here to allow duplicate frame rendering without crashing.
+            sphere_container.plotly_chart(fig_life, use_container_width=True)
 
         if st.button("▶ Simulate Universal Life Cycle", key="btn_life"):
             st.info("Running geometric expansion/contraction sequence...")
@@ -539,3 +539,5 @@ with t4:
     st.markdown("**Explanation:** Scalar chord distance including Δw (functional saturation depth axis).")
 
 st.caption("CBQG v10.5.1 © Dr. Anthony Omar Peña, D.O. — All rights reserved.")
+
+
