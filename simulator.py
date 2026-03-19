@@ -6,7 +6,6 @@ import time
 
 st.set_page_config(page_title="CBQG v10.5.1 Universal Engine", layout="wide")
 
-# Meta tags are optional; kept because you had them. They are HTML and safe to keep escaped here.
 st.markdown("""
 <meta name="version" content="10.5.1">
 <meta name="last-updated" content="2026-03-18">
@@ -19,17 +18,12 @@ st.markdown("**Sovereign Research Lead:** Dr. Anthony Omar Peña, D.O., LT, MC, 
 st.caption("All mechanics derived solely from C ≤ C_max. Metric Radial Depth is a functional saturation coordinate.")
 
 # ====================== SESSION STATE & CAMERA MATRICES ======================
-if "chi_global" not in st.session_state:
-    st.session_state.chi_global = 0.50
-if "wh_active" not in st.session_state:
-    st.session_state.wh_active = False
+if "chi_global" not in st.session_state: st.session_state.chi_global = 0.50
+if "wh_active" not in st.session_state: st.session_state.wh_active = False
 
-if "cam_t1_gw" not in st.session_state:
-    st.session_state.cam_t1_gw = dict(eye=dict(x=1.5, y=1.5, z=1.5))
-if "cam_t1_sph" not in st.session_state:
-    st.session_state.cam_t1_sph = dict(eye=dict(x=1.5, y=1.5, z=1.5))
-if "cam_t2_hw" not in st.session_state:
-    st.session_state.cam_t2_hw = dict(eye=dict(x=1.5, y=1.5, z=1.5))
+if "cam_t1_gw" not in st.session_state: st.session_state.cam_t1_gw = dict(eye=dict(x=1.5, y=1.5, z=1.5))
+if "cam_t1_sph" not in st.session_state: st.session_state.cam_t1_sph = dict(eye=dict(x=1.5, y=1.5, z=1.5))
+if "cam_t2_hw" not in st.session_state: st.session_state.cam_t2_hw = dict(eye=dict(x=1.5, y=1.5, z=1.5))
 
 # ====================== SIDEBAR ======================
 st.sidebar.header("Master Controls")
@@ -38,29 +32,20 @@ if st.sidebar.button("⚠️ SYSTEM RESET"):
     st.rerun()
 
 st.sidebar.markdown("---")
-chi_global = st.sidebar.slider(
-    "Global Saturation χ",
-    0.001, 1.000,
-    st.session_state.get("chi_global", 0.50),
-    0.01
-)
+chi_global = st.sidebar.slider("Global Saturation χ", 0.001, 1.000, st.session_state.get("chi_global", 0.50), 0.01)
 st.session_state.chi_global = chi_global
 
-univ_R = st.sidebar.number_input(
-    "Universal 4D Radius (R, meters)",
-    1e10, 1e30, 1e22,
-    step=1e20
-)
+univ_R = st.sidebar.number_input("Universal 4D Radius (R, meters)", 1e10, 1e30, 1e22, step=1e20)
 st.sidebar.caption("Determines baseline universal scale. Exponentially drives Minimum Standoff (D_msd) and exactly dictates the 4D Highway Traversable Core Volume (V_core).")
 
 st.sidebar.markdown("---")
 st.sidebar.success("Engine Engaged: All kinetics bonded interactively to Global χ.")
 
 # ====================== CBQG THEORETICAL CORE (PURE MATH) ======================
-# Appendix B-faithful scalar equations (ε = 1e-9 included where specified).
+# Appendix B-faithful equations (ε = 1e-9 included where specified). [1](https://onedrive.live.com/?id=c0fe8902-fb01-4f0e-a450-51f8682d5cf7&cid=add893de30e38c77&web=1)
 EPS = 1e-9
 
-def clamp_chi(chi):
+def clamp_chi(chi): 
     return np.clip(chi, 0.0, 1.0)
 
 def m_eff(m0, chi):
@@ -84,23 +69,17 @@ def chi_decay(chi_init, k, t):
 
 def v_eff(v0, chi):
     c = clamp_chi(chi)
-    return v0 * (1.0 - c)  # Strictly linear per Appendix B.
+    return v0 * (1.0 - c)  # Strictly linear per Appendix B. [1](https://onedrive.live.com/?id=c0fe8902-fb01-4f0e-a450-51f8682d5cf7&cid=add893de30e38c77&web=1)
 
 # ====================== VISUALIZATION HEURISTICS ======================
 def format_distance(m):
     ly = 9.461e15
-    if m >= ly:
-        return f"{m / ly:,.2f} Light Years"
-    elif m >= 1e15:
-        return f"{m / 1e15:,.2f} Trillion km"
-    elif m >= 1e12:
-        return f"{m / 1e12:,.2f} Billion km"
-    elif m >= 1e9:
-        return f"{m / 1e9:,.2f} Million km"
-    elif m >= 1000:
-        return f"{m / 1000:,.2f} km"
-    else:
-        return f"{m:,.2f} m"
+    if m >= ly:            return f"{m / ly:,.2f} Light Years"
+    elif m >= 1e15:        return f"{m / 1e15:,.2f} Trillion km"
+    elif m >= 1e12:        return f"{m / 1e12:,.2f} Billion km"
+    elif m >= 1e9:         return f"{m / 1e9:,.2f} Million km"
+    elif m >= 1000:        return f"{m / 1000:,.2f} km"
+    else:                  return f"{m:,.2f} m"
 
 U_RES, V_RES = 30j, 30j
 u, v = np.mgrid[0:2*np.pi:U_RES, 0:np.pi:V_RES]
@@ -120,33 +99,26 @@ t1, t2, t3, t4 = st.tabs([
 with t1:
     st.subheader("Cosmic Reality — Geometric Saturation")
     st.markdown("""
-### **The Third Law of Nature (Axiom):**
+### **The Third Law of Nature (Axiom):** 
 Infinite information density cannot exist within any finite region of spacetime. The open question is therefore not whether a constraint exists, but which physical mechanism enforces it. **CBQG proposes that spacetime curvature itself is bounded by a maximum value:**
 
 ## **C ≤ C_max**
 
 Alongside the invariant speed of light (c) and the quantum of action (h-bar), formalized by the Geometric Saturation Invariant **χ = C/C_max**, where **C = √(R_abcd R^abcd)** is the invariant curvature magnitude, the square root of the Kretschmann scalar.
 """)
-    st.info("⚠️ **Structural Engine Disclaimer:** True CBQG incorporates the covariant evolution of the R_abcd tensor field. In this real-time simulator, χ compresses the 4D saturation magnitude into a single master scalar to visually drive macroscopic reactions.")
+    st.info("⚠️ **Structural Engine Disclaimer:** True CBQG incorporates the covariant evolution of the $R_{abcd}$ tensor field. In this real-time simulator, χ compresses the 4D saturation magnitude into a master 1D scalar to visually drive macroscopic reactions.")
     st.markdown("<h3 style='color:red;'>🚨 χ=1 IS ABSOLUTE GEOMETRIC SATURATION (C_max) 🚨</h3>", unsafe_allow_html=True)
 
-    view_mode = st.radio(
-        "Select Reality Representation:",
-        ["3D Spacetime (Gravity Well)", "4D Hypersphere (Dynamic Edge)"],
-        horizontal=True
-    )
+    view_mode = st.radio("Select Reality Representation:", ["3D Spacetime (Gravity Well)", "4D Hypersphere (Dynamic Edge)"], horizontal=True)
 
     if view_mode == "3D Spacetime (Gravity Well)":
         st.write("Visualizing a 3D gravitational well where the depth (curvature) is strictly bounded by C_max (χ=1).")
 
         st.write("### 🎥 Explicit Camera Controls")
         c1, c2, c3 = st.columns(3)
-        if c1.button("Top-Down View", key="gw_t"):
-            st.session_state.cam_t1_gw = dict(eye=dict(x=0, y=0, z=2.5))
-        if c2.button("Side Cross-Section", key="gw_s"):
-            st.session_state.cam_t1_gw = dict(eye=dict(x=2.5, y=0, z=0))
-        if c3.button("Isometric View (Default)", key="gw_i"):
-            st.session_state.cam_t1_gw = dict(eye=dict(x=1.5, y=1.5, z=1.5))
+        if c1.button("Top-Down View", key="gw_t"): st.session_state.cam_t1_gw = dict(eye=dict(x=0, y=0, z=2.5))
+        if c2.button("Side Cross-Section", key="gw_s"): st.session_state.cam_t1_gw = dict(eye=dict(x=2.5, y=0, z=0))
+        if c3.button("Isometric View (Default)", key="gw_i"): st.session_state.cam_t1_gw = dict(eye=dict(x=1.5, y=1.5, z=1.5))
 
         x = np.linspace(-5, 5, 40)
         y = np.linspace(-5, 5, 40)
@@ -157,9 +129,7 @@ Alongside the invariant speed of light (c) and the quantum of action (h-bar), fo
         max_depth = -3.0 * chi_global
         zz = np.maximum(depth_nominal, max_depth)
 
-        fig3d = go.Figure(
-            data=[go.Surface(z=zz, x=xx, y=yy, colorscale='Viridis', opacity=0.9, showscale=False)]
-        )
+        fig3d = go.Figure(data=[go.Surface(z=zz, x=xx, y=yy, colorscale='Viridis', opacity=0.9, showscale=False)])
         fig3d.add_trace(go.Surface(
             z=np.full_like(zz, -3.0), x=xx, y=yy,
             showscale=False, opacity=0.3, colorscale='Reds',
@@ -190,20 +160,13 @@ Alongside the invariant speed of light (c) and the quantum of action (h-bar), fo
         st.write("### The 4D Hypersphere Map")
         st.markdown("**Why are there only 3 axes?** This is a 3D surface projection of a 4D shape. The 4th geometric dimension extends radially inward toward the core, physically experienced as metric density.")
 
-        scale_mode = st.radio(
-            "Viewport Scaling Matrix",
-            ["Visual (Linear Drop)", "Physical (Nonlinear Metric Compression)"],
-            horizontal=True
-        )
+        scale_mode = st.radio("Viewport Scaling Matrix", ["Visual (Linear Drop)", "Physical (Nonlinear Metric Compression)"], horizontal=True)
 
         st.write("### 🎥 Explicit Camera Controls")
         c1, c2, c3 = st.columns(3)
-        if c1.button("Top-Down View", key="sph_t"):
-            st.session_state.cam_t1_sph = dict(eye=dict(x=0, y=0, z=2.5))
-        if c2.button("Side Cross-Section", key="sph_s"):
-            st.session_state.cam_t1_sph = dict(eye=dict(x=2.5, y=0, z=0))
-        if c3.button("Isometric View", key="sph_i"):
-            st.session_state.cam_t1_sph = dict(eye=dict(x=1.5, y=1.5, z=1.5))
+        if c1.button("Top-Down View", key="sph_t"): st.session_state.cam_t1_sph = dict(eye=dict(x=0, y=0, z=2.5))
+        if c2.button("Side Cross-Section", key="sph_s"): st.session_state.cam_t1_sph = dict(eye=dict(x=2.5, y=0, z=0))
+        if c3.button("Isometric View", key="sph_i"): st.session_state.cam_t1_sph = dict(eye=dict(x=1.5, y=1.5, z=1.5))
 
         r_t = univ_R * np.sqrt(max(0.0, 1.0 - chi_global**2))
         st.metric("Hypersphere True Radius", f"{r_t:.2e} m")
@@ -227,14 +190,11 @@ Alongside the invariant speed of light (c) and the quantum of action (h-bar), fo
                 x=rad * np.cos(mesh_u) * np.sin(mesh_v),
                 y=rad * np.sin(mesh_u) * np.sin(mesh_v),
                 z=rad * np.cos(mesh_v),
-                opacity=0.8,
-                colorscale="Plasma",
-                showscale=False
+                opacity=0.8, colorscale="Plasma", showscale=False
             ))
 
             fig_life.update_layout(
-                title="4D Hypersphere Envelope",
-                height=500,
+                title="4D Hypersphere Envelope", height=500,
                 margin=dict(l=0, r=0, b=0, t=40),
                 scene_camera=st.session_state.cam_t1_sph,
                 scene=dict(
@@ -303,10 +263,7 @@ with t2:
         sin_a_ph, cos_a_ph = np.sin(pt_a_phi), np.cos(pt_a_phi)
         sin_b_ph, cos_b_ph = np.sin(pt_b_phi), np.cos(pt_b_phi)
 
-        dot_product = np.clip(
-            sin_a_th * sin_b_th * np.cos(pt_a_phi - pt_b_phi) + cos_a_th * cos_b_th,
-            -1.0, 1.0
-        )
+        dot_product = np.clip(sin_a_th * sin_b_th * np.cos(pt_a_phi - pt_b_phi) + cos_a_th * cos_b_th, -1.0, 1.0)
         surface_dist = univ_R * np.arccos(dot_product)
 
         depth_a = 1.0 - pt_a_chi
@@ -327,24 +284,20 @@ with t2:
 
         st.metric("Surface Distance (S)", f"{format_distance(surface_dist)}")
         st.metric("Internal Chord Distance (L)", f"{format_distance(chord_dist)}")
-        st.caption("L shown here matches the Appendix-B chord shortcut form (includes Δw); this is a visualization construct, not a covariant geodesic solver.")
+        st.caption("L uses the Appendix-B chord shortcut form (includes Δw). Display is a visualization, not a covariant geodesic solver.")
         st.metric("🚀 Distance Savings (S - L)", f"{format_distance(dist_saved)}", delta="Saved via Metric Depth")
 
     with colB:
         st.write("### 🎥 Explicit Camera Controls")
         c1, c2, c3 = st.columns(3)
-        if c1.button("Top-Down View", key="hw_top"):
-            st.session_state.cam_t2_hw = dict(eye=dict(x=0, y=0, z=2.5))
-        if c2.button("Side Cross-Section", key="hw_side"):
-            st.session_state.cam_t2_hw = dict(eye=dict(x=2.5, y=0, z=0))
-        if c3.button("Isometric View", key="hw_iso"):
-            st.session_state.cam_t2_hw = dict(eye=dict(x=1.5, y=1.5, z=1.5))
+        if c1.button("Top-Down View", key="hw_top"): st.session_state.cam_t2_hw = dict(eye=dict(x=0, y=0, z=2.5))
+        if c2.button("Side Cross-Section", key="hw_side"): st.session_state.cam_t2_hw = dict(eye=dict(x=2.5, y=0, z=0))
+        if c3.button("Isometric View", key="hw_iso"): st.session_state.cam_t2_hw = dict(eye=dict(x=1.5, y=1.5, z=1.5))
 
         fig2 = go.Figure()
         x_sph = univ_R * np.cos(u) * np.sin(v)
         y_sph = univ_R * np.sin(u) * np.sin(v)
         z_sph = univ_R * np.cos(v)
-
         fig2.add_trace(go.Surface(x=x_sph, y=y_sph, z=z_sph, opacity=0.10, colorscale="Blues", showscale=False))
 
         xa_surf = univ_R * sin_a_th * cos_a_ph
@@ -360,8 +313,7 @@ with t2:
             x=[xa_surf], y=[ya_surf], z=[za_surf],
             mode='markers+text',
             marker=dict(size=12, color=color_a),
-            text=["Edge A"],
-            textposition="top center",
+            text=["Edge A"], textposition="top center",
             name="Surface A"
         ))
         fig2.add_trace(go.Scatter3d(
@@ -377,8 +329,7 @@ with t2:
             x=[xb_surf], y=[yb_surf], z=[zb_surf],
             mode='markers+text',
             marker=dict(size=12, color=color_b),
-            text=["Edge B"],
-            textposition="top center",
+            text=["Edge B"], textposition="top center",
             name="Surface B"
         ))
         fig2.add_trace(go.Scatter3d(
@@ -396,7 +347,6 @@ with t2:
 
         line_color = 'lime' if is_wormhole else 'yellow'
         bridge_name = "Core Wormhole" if is_wormhole else "Shallow Chord"
-
         fig2.add_trace(go.Scatter3d(
             x=tx, y=ty, z=tz,
             mode='lines',
@@ -413,16 +363,10 @@ with t2:
         ))
 
         fig2.update_layout(
-            title="4D Saturation Bridge",
-            height=600,
-            showlegend=True,
+            title="4D Saturation Bridge", height=600, showlegend=True,
             margin=dict(l=0, r=0, b=0, t=40),
             scene_camera=st.session_state.cam_t2_hw,
-            scene=dict(
-                xaxis=dict(showticklabels=False),
-                yaxis=dict(showticklabels=False),
-                zaxis=dict(showticklabels=False)
-            ),
+            scene=dict(xaxis=dict(showticklabels=False), yaxis=dict(showticklabels=False), zaxis=dict(showticklabels=False)),
         )
         st.plotly_chart(fig2, use_container_width=True, key="highway_transit_plot")
 
@@ -430,14 +374,8 @@ with t2:
     st.markdown("### 🗺️ Navigational Mission Planner")
     colM1, colM2 = st.columns(2)
     with colM1:
-        target_sf_route = st.number_input(
-            "Target Surface Distance (S, meters) to bypass:",
-            1e3, float(univ_R*np.pi), 1e15, format="%.2e"
-        )
-        target_ch_route = st.number_input(
-            "Desired Max Transit Span (L, meters):",
-            1e3, float(univ_R), 1e11, format="%.2e"
-        )
+        target_sf_route = st.number_input("Target Surface Distance (S, meters) to bypass:", 1e3, float(univ_R*np.pi), 1e15, format="%.2e")
+        target_ch_route = st.number_input("Desired Max Transit Span (L, meters):", 1e3, float(univ_R), 1e11, format="%.2e")
     with colM2:
         st.info("Heuristic routing estimate: computes a visualization-only χ proxy to reduce a surface span S toward a target chord span L.")
         if target_ch_route >= target_sf_route:
@@ -456,14 +394,11 @@ with t3:
     st.warning("⚠️ SPECULATIVE ENGINEERING: The following applies CBQG heuristic physics to reverse-engineer reported UAP kinematics. This is mathematically rigorous to the theory, but strictly speculative in real-world attribution.")
 
     st.markdown("""
-When radar systems track anomalous craft, they report kinematics irreconcilable with General Relativity. Under CBQG, if a craft accumulates localized spacetime geometrically tight to its hull limit (χ → 1), **acceleration increases without bound under finite force (via m_eff → 0)**. This severs its inertial coupling from classical reality, allowing it to safely execute a **4D interior chord transit**.
+When radar systems track anomalous craft, they report kinematics irreconcilable with General Relativity. Under CBQG, if a craft accumulates localized spacetime geometrically tight to its hull limit (χ → 1), **acceleration increases without bound under finite force (via m_eff → 0)**. This severs its inertial coupling from classical reality, allowing it to safely execute a **4D interior chord transit** completely uninhibited by mass barriers.
 """)
 
     st.markdown("### 📡 Scenario Modeler")
-    scenario = st.selectbox(
-        "Load Physical Sensor Profile:",
-        ["Manual Entry", "Nimitz 'Tic Tac' Encounter (2004)", "Malmstrom AFB Shutdown (1967)"]
-    )
+    scenario = st.selectbox("Load Physical Sensor Profile:", ["Manual Entry", "Nimitz 'Tic Tac' Encounter (2004)", "Malmstrom AFB Shutdown (1967)"])
 
     if scenario == "Nimitz 'Tic Tac' Encounter (2004)":
         scn_chi = 0.999
@@ -479,12 +414,9 @@ When radar systems track anomalous craft, they report kinematics irreconcilable 
         scn_v = 120.0
 
     colS1, colS2, colS3 = st.columns(3)
-    with colS1:
-        m0 = st.slider("Craft Baseline Mass (kg)", 1.0, 1000000.0, float(scn_m0))
-    with colS2:
-        active_chi = st.slider("Active Saturation (χ)", 0.001, 1.000, float(scn_chi), 0.001)
-    with colS3:
-        V_electronics = st.slider("Control Voltage (V)", 1.0, 1000.0, float(scn_v))
+    with colS1: m0 = st.slider("Craft Baseline Mass (kg)", 1.0, 1000000.0, float(scn_m0))
+    with colS2: active_chi = st.slider("Active Saturation (χ)", 0.001, 1.000, float(scn_chi), 0.001)
+    with colS3: V_electronics = st.slider("Control Voltage (V)", 1.0, 1000.0, float(scn_v))
 
     drag_base = 1000.0
     R_craft = 10.0
@@ -497,8 +429,7 @@ When radar systems track anomalous craft, they report kinematics irreconcilable 
         st.markdown("**USS Princeton, 2004 - AN/SPY-1 Analog**")
         m_e = m_eff(m0, active_chi)
         st.markdown(
-            f"**m_eff = {m0:,.0f} × √(1 - {active_chi}²) = "
-            f"<span style='color:lime'>{m_e:,.1f} kg</span>**",
+            f"**m_eff = {m0:,.0f} × √(1 - {active_chi}²) = <span style='color:lime'>{m_e:,.1f} kg</span>**",
             unsafe_allow_html=True
         )
         st.progress(max(0.0, min(1.0, 1.0 - m_e/m0)))
@@ -509,8 +440,7 @@ When radar systems track anomalous craft, they report kinematics irreconcilable 
         st.markdown("**Nimitz & Roosevelt Encounters**")
         d_m = d_msd(R_craft, active_chi)
         st.markdown(
-            f"**D_msd = {R_craft} × [{active_chi} / (1 - {active_chi} + ε)]^(1/3) = "
-            f"<span style='color:lime'>{d_m:,.1f} m</span>**",
+            f"**D_msd = {R_craft} × [{active_chi} / (1 - {active_chi} + ε)]^(1/3) = <span style='color:lime'>{d_m:,.1f} m</span>**",
             unsafe_allow_html=True
         )
 
@@ -519,8 +449,7 @@ When radar systems track anomalous craft, they report kinematics irreconcilable 
         st.markdown("**Nimitz, 2004 - Commander Fravor Analog**")
         f_d = f_drag(drag_base, active_chi)
         st.markdown(
-            f"**F_drag = {drag_base} × √(1 - {active_chi}²) = "
-            f"<span style='color:lime'>{f_d:,.1f} N</span>**",
+            f"**F_drag = {drag_base} × √(1 - {active_chi}²) = <span style='color:lime'>{f_d:,.1f} N</span>**",
             unsafe_allow_html=True
         )
         st.progress(max(0.0, min(1.0, 1.0 - f_d/drag_base)))
@@ -529,8 +458,7 @@ When radar systems track anomalous craft, they report kinematics irreconcilable 
         st.markdown("**Malmstrom AFB, 1967 Analog**")
         v_e = v_eff(V_electronics, active_chi)
         st.markdown(
-            f"**V_eff = {V_electronics} × (1 - {active_chi}) = "
-            f"<span style='color:red'>{v_e:,.2f} V</span>**",
+            f"**V_eff = {V_electronics} × (1 - {active_chi}) = <span style='color:red'>{v_e:,.2f} V</span>**",
             unsafe_allow_html=True
         )
         if active_chi > 0.90:
@@ -538,22 +466,22 @@ When radar systems track anomalous craft, they report kinematics irreconcilable 
 
     st.markdown("---")
     st.markdown("### ☄️ Re-entry Protocol Simulator")
-    st.markdown("Safely transitioning back to standard spacetime (χ < 0.05) requires managing internal G-forces (heuristic proxy).")
+    st.markdown("Safely transitioning back to standard spacetime (χ < 0.05) requires managing internal G-forces.")
 
     colR1, colR2 = st.columns(2)
     with colR1:
         sim_k = st.slider("Re-entry Damping Factor (k)", 0.1, 15.0, 3.0, 0.1)
         st.info("A rapid saturation drop (high k) reconnects inertia quickly; slower decay buffers the inertial wave (heuristic operational note).")
     with colR2:
-        peak_g = 50.0 * sim_k * active_chi  # heuristic proxy
+        peak_g = 50.0 * sim_k * active_chi  # heuristic proxy for d(chi)/dt shock
         st.metric("Peak Inertial Whiplash", f"{peak_g:.1f} Gs")
         st.caption("Heuristic proxy for theoretical structural shear; order-of-magnitude estimate only.")
         if peak_g > 50:
-            st.error("🚨 STRUCTURAL FAILURE: G-force exceeds 50G airframe limit (heuristic threshold).")
+            st.error("🚨 STRUCTURAL FAILURE: G-force exceeds 50G airframe limit.")
         elif active_chi <= 0.05:
             st.success("✅ CRAFT AT NORMAL INERTIA.")
         else:
-            st.success("✅ RE-ENTRY SURVIVABLE (heuristic).")
+            st.success("✅ RE-ENTRY SURVIVABLE.")
 
         t_arr = np.linspace(0, 5, 50)
         chi_t = chi_decay(active_chi, sim_k, t_arr)
@@ -572,7 +500,7 @@ with t4:
     st.subheader("Theory & Axioms")
 
     st.markdown("### 0. The Unified Scalar Simplification (Engine Constraint)")
-    st.markdown("**Explanation:** True CBQG is a covariant tensor formulation driven by the invariant curvature limits of R_abcd R^abcd. For this browser-based simulator, the tensor field is simplified into a single master scalar UI control (χ). Consequently, χ acts pedagogically across multiple dependent axes as curvature magnitude, spatial depth coordinate, and mass modifier simultaneously.")
+    st.markdown("**Explanation:** True CBQG is a covariant tensor formulation driven by the invariant curvature limits of $R_{abcd}R^{abcd}$. For this browser-based simulator, the tensor field is simplified into a single master scalar UI control (χ). Consequently, χ acts pedagogically across multiple dependent axes as curvature magnitude, spatial depth coordinate, and mass modifier simultaneously.")
 
     st.markdown("### 1. Metric Saturation Invariant (χ)")
     st.code("χ = C / C_max ≤ 1")
@@ -592,7 +520,7 @@ with t4:
 
     st.markdown("### 5. Electromagnetic Damping (V_eff)")
     st.code("V_eff = V_0 (1 - χ)")
-    st.markdown("**Explanation:** Vacuum impedance increases with χ; voltage conduction drops linearly in this Appendix-B form.")
+    st.markdown("**Explanation:** Vacuum impedance increases with χ; voltage conduction drops linearly in the Appendix-B form.")
 
     st.markdown("### 6. 4D Highway Volume (V_core)")
     st.code("V_core = 0.5 π² R⁴ (1 - √(1 - χ²))")
