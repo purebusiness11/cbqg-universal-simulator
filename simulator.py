@@ -6,6 +6,25 @@ import time
 
 st.set_page_config(page_title="CBQG v10.5.1 Universal Engine", layout="wide")
 
+# ====================== GLOBAL CSS — prevent Plotly animation buttons turning white ======================
+st.markdown("""
+<style>
+/* Force Plotly updatemenus (animation play/stop buttons) to stay dark even when active */
+.updatemenu-item-rect {
+    fill: rgba(40, 40, 80, 1) !important;
+    stroke: rgba(120, 120, 190, 1) !important;
+}
+.updatemenu-item-text {
+    fill: rgba(210, 210, 255, 1) !important;
+}
+/* Also target active/hover states */
+.updatemenu-item-rect:hover,
+.updatemenu-item.active .updatemenu-item-rect {
+    fill: rgba(70, 70, 130, 1) !important;
+}
+</style>
+""", unsafe_allow_html=True)
+
 st.markdown("""
 <meta name="version" content="10.5.1">
 <meta name="last-updated" content="2026-03-18">
@@ -349,10 +368,19 @@ Default view: **side cross-section** so both wells are visible simultaneously.
     # ---- HYPERSPHERE LIFE CYCLE ----
     else:
         st.markdown("""
-**χ = 0** → Maximum expansion, perfectly smooth sphere.
-**χ → 1** → Contraction, curvature ripples amplify toward saturation.
-**χ = 1** → Big Bounce. Singularity forbidden. Geometry saturates.
-Animation cycles **χ: 0.000 → 1.000 → 0.000** continuously. Use PLAY/STOP and the scrubber below the chart.
+**One complete CBQG cosmic cycle:**
+
+| χ value | Phase |
+|---|---|
+| **χ = 1.000** | ⚡ **Big Bounce** — C_max saturation. Singularity forbidden. Geometry at maximum curvature. |
+| χ: 1 → 0.5 | **Expansion** — Universe grows rapidly. Dark energy dominant. Sphere smooths out. |
+| χ: 0.5 → 0.1 | **Dark Energy Dissipation** — Λ(t) decays. Expansion slows. |
+| **χ = 0.000** | 🔵 **Turnaround Point** — Maximum expansion. Perfectly smooth sphere. H → 0. |
+| χ: 0 → 0.5 | **Contraction** — Universe collapses inward. Curvature ripples amplify. |
+| χ: 0.5 → 1 | **Big Crunch** — Collapse accelerates toward C_max. Ripples at maximum. |
+| **χ = 1.000** | ⚡ **Big Bounce** — Cycle repeats. Singularity forbidden. |
+
+Animation plays **one full cycle: χ=1 → χ=0 → χ=1**. Use PLAY/STOP and the scrubber below.
 """)
         scale_mode = st.radio("Viewport Scaling", ["Visual (Linear Drop)", "Physical (Nonlinear Metric Compression)"], horizontal=True)
         st.write("### 🎥 Explicit Camera Controls")
@@ -364,24 +392,32 @@ Animation cycles **χ: 0.000 → 1.000 → 0.000** continuously. Use PLAY/STOP a
         if c3.button("Isometric View", key="sph_i"):
             st.session_state.cam_t1_sph = dict(eye=dict(x=1.5,y=1.5,z=1.5))
 
-        if chi_global > 0.95:
-            st.error("BIG BOUNCE — r_min floor engaged (χ limits reach C_max)")
+        if chi_global < 0.05:
+            st.info("TURNAROUND POINT — χ ≈ 0, maximum expansion. Universe is at its largest and smoothest.")
+        elif chi_global > 0.95:
+            st.error("BIG BOUNCE / BIG CRUNCH — χ ≈ 1, C_max saturation. Geometry at maximum curvature.")
 
         max_bound = univ_R * 1.15
-        # Full 0→1→0 cycle with 35 steps each direction
-        chi_up   = np.linspace(0.000, 1.000, 35)
-        chi_down = np.linspace(1.000, 0.000, 35)
-        chi_cycle = np.concatenate([chi_up, chi_down])
+
+        # Cycle starts at chi=1 (Big Bounce), expands to chi=0 (Turnaround), contracts back to chi=1 (Big Bounce)
+        # 35 steps each half = 70 total frames, starting and ending at chi=1
+        chi_expand   = np.linspace(1.000, 0.000, 36)   # Big Bounce → Turnaround
+        chi_contract = np.linspace(0.000, 1.000, 36)   # Turnaround → Big Bounce
+        # Drop duplicate endpoints where they join
+        chi_cycle = np.concatenate([chi_expand[:-1], chi_contract])
 
         def sphere_rad(c_val):
             c_v = clamp_chi(c_val)
             if scale_mode == "Physical (Nonlinear Metric Compression)":
+                # At chi=1: radius=0 (bounce point). At chi=0: radius=univ_R (max expansion)
                 return univ_R * np.sqrt(max(0.0, 1.0 - c_v**2))
             else:
+                # Visual linear: at chi=1 sphere is small (0.1*R), at chi=0 sphere is large (1.1*R)
                 return univ_R * max(0.001, 1.1 - c_v)
 
-        rad0 = sphere_rad(clamp_chi(chi_global))
-        sx0, sy0, sz0 = rippled_sphere(rad0, clamp_chi(chi_global), u, v)
+        # Initial frame: start at chi=1 (Big Bounce) — small, highly rippled sphere
+        rad0 = sphere_rad(1.000)
+        sx0, sy0, sz0 = rippled_sphere(rad0, 1.000, u, v)
 
         fig_life = go.Figure(data=[go.Surface(
             x=sx0, y=sy0, z=sz0, opacity=0.85,
@@ -389,22 +425,46 @@ Animation cycles **χ: 0.000 → 1.000 → 0.000** continuously. Use PLAY/STOP a
             cmin=0, cmax=1
         )])
 
+        def phase_label(c_val, frame_idx, total_frames):
+            """Generate accurate phase label based on position in cycle."""
+            half = total_frames // 2
+            in_expansion = frame_idx < half  # first half: chi 1→0 (expansion)
+
+            if c_val >= 0.999:
+                if frame_idx == 0:
+                    return f"χ = {c_val:.3f} | ⚡ BIG BOUNCE — C_max geometric saturation. Singularity forbidden."
+                else:
+                    return f"χ = {c_val:.3f} | ⚡ BIG BOUNCE — Cycle complete. C_max reached again."
+            elif c_val <= 0.001:
+                return f"χ = {c_val:.3f} | 🔵 TURNAROUND POINT — Maximum expansion. Perfectly smooth. H → 0. Contraction begins."
+            elif in_expansion:
+                if c_val > 0.70:
+                    return f"χ = {c_val:.3f} | EXPANSION — Post-bounce rapid growth. Dark energy rising."
+                elif c_val > 0.40:
+                    return f"χ = {c_val:.3f} | EXPANSION — Λ(t) dissipating. Expansion rate slowing."
+                else:
+                    return f"χ = {c_val:.3f} | EXPANSION — Dark energy near minimum. Approaching turnaround."
+            else:
+                if c_val < 0.30:
+                    return f"χ = {c_val:.3f} | CONTRACTION — Collapse beginning. Curvature ripples emerging."
+                elif c_val < 0.70:
+                    return f"χ = {c_val:.3f} | CONTRACTION — Curvature ripples amplifying."
+                else:
+                    return f"χ = {c_val:.3f} | BIG CRUNCH — Collapse accelerating toward C_max. Geometry saturating."
+
         anim_frames = []
+        total_frames = len(chi_cycle)
         for i, c_val in enumerate(chi_cycle):
             c_val = float(np.clip(c_val, 0.0, 1.0))
             r_f = sphere_rad(c_val)
             sx, sy, sz = rippled_sphere(r_f, c_val, u, v)
-            if c_val < 0.10:    phase = f"χ = {c_val:.3f} | EXPANSION — perfectly smooth, dark energy dominant"
-            elif c_val < 0.40:  phase = f"χ = {c_val:.3f} | EXPANSION CONTINUES — Λ(t) dissipating"
-            elif c_val < 0.70:  phase = f"χ = {c_val:.3f} | TURNAROUND APPROACH — contraction begins"
-            elif c_val < 0.95:  phase = f"χ = {c_val:.3f} | CONTRACTION — curvature ripples amplifying"
-            else:               phase = f"χ = {c_val:.3f} | ⚡ BIG BOUNCE — C_max geometric saturation"
+            phase = phase_label(c_val, i, total_frames)
             anim_frames.append(go.Frame(
                 data=[go.Surface(x=sx, y=sy, z=sz, opacity=0.85,
                                   colorscale="Plasma", showscale=False, cmin=0, cmax=1)],
                 name=f"frame_{i}",
                 layout=go.Layout(
-                    title_text=f"4D Hypersphere Life Cycle — {phase}",
+                    title_text=f"CBQG Universe Life Cycle — {phase}",
                     plot_bgcolor='rgba(12,12,22,1)',
                     paper_bgcolor='rgba(12,12,22,1)'
                 )
@@ -412,7 +472,7 @@ Animation cycles **χ: 0.000 → 1.000 → 0.000** continuously. Use PLAY/STOP a
         fig_life.frames = anim_frames
 
         fig_life.update_layout(
-            title=f"4D Hypersphere Life Cycle — χ = {chi_global:.5f}",
+            title=f"CBQG Universe Life Cycle — Starting at Big Bounce (χ = 1.000)",
             height=680,
             margin=dict(l=0, r=0, b=160, t=55),
             plot_bgcolor='rgba(12,12,22,1)',
@@ -429,14 +489,15 @@ Animation cycles **χ: 0.000 → 1.000 → 0.000** continuously. Use PLAY/STOP a
                 bgcolor='rgba(12,12,22,1)'
             ),
             updatemenus=[dict(
-                type="buttons", direction="left", showactive=True,
+                type="buttons", direction="left", showactive=False,
+                active=-1,
                 y=-0.10, yanchor="top", x=0.0, xanchor="left",
-                bgcolor='rgba(30,30,50,1)',
-                bordercolor='rgba(100,100,150,1)',
-                font=dict(color='white'),
+                bgcolor='rgba(40,40,80,1)',
+                bordercolor='rgba(120,120,190,1)',
+                font=dict(color='rgba(210,210,255,1)'),
                 pad={"t": 8, "r": 8},
                 buttons=[
-                    dict(label="▶ PLAY LIFE CYCLE (χ: 0 → 1 → 0, repeating)",
+                    dict(label="▶ PLAY FULL CYCLE (Big Bounce → Turnaround → Big Bounce)",
                          method="animate",
                          args=[None, dict(frame=dict(duration=110, redraw=True),
                                           transition=dict(duration=0),
@@ -453,8 +514,8 @@ Animation cycles **χ: 0.000 → 1.000 → 0.000** continuously. Use PLAY/STOP a
                 ) for i in range(len(chi_cycle))],
                 transition=dict(duration=0),
                 x=0.0, y=-0.22, len=1.0,
-                bgcolor='rgba(30,30,50,0.8)',
-                bordercolor='rgba(100,100,150,1)',
+                bgcolor='rgba(40,40,80,0.8)',
+                bordercolor='rgba(120,120,190,1)',
                 font=dict(color='white'),
                 tickcolor='white',
                 pad={"t": 40, "b": 10},
@@ -465,7 +526,7 @@ Animation cycles **χ: 0.000 → 1.000 → 0.000** continuously. Use PLAY/STOP a
             )]
         )
         st.plotly_chart(fig_life, use_container_width=True, key="native_plotly_lifecycle")
-        st.caption("χ=0.000: perfectly smooth sphere. χ→1.000: curvature ripples amplify. χ=1.000: Big Bounce. Buttons and scrubber appear below the chart.")
+        st.caption("χ=1.000: Big Bounce (small, highly rippled sphere — C_max saturation). χ→0.000: expansion, sphere grows and smooths. χ=0.000: Turnaround Point (large perfectly smooth sphere). χ→1.000: contraction, ripples amplify toward Big Bounce again. Buttons and scrubber below the chart.")
 
     st.markdown("""
 ---
@@ -558,15 +619,23 @@ As localized saturation χ approaches 1, the reality manifold is **siphoned radi
 
         st.markdown("---")
         st.markdown("#### Transit Telemetry")
-        c1m, c2m = st.columns(2)
-        with c1m:
-            st.metric("Surface Distance (S)", format_distance(surface_dist))
-            st.metric("Chord Distance (L)", format_distance(chord_dist))
-            st.metric("Distance Saved", format_distance(max(0, dist_saved)))
-        with c2m:
-            st.metric("Distance Traveled", format_distance(dist_traveled))
-            st.metric("Elapsed Transit Time", format_time(t_elapsed))
-            st.metric("Total Est. Field Energy", format_energy(E_total))
+        rows = [
+            ("Surface Distance (S)",    format_distance(surface_dist)),
+            ("Chord Distance (L)",       format_distance(chord_dist)),
+            ("Distance Saved",           format_distance(max(0, dist_saved))),
+            ("Distance Traveled",        format_distance(dist_traveled)),
+            ("Elapsed Transit Time",     format_time(t_elapsed)),
+            ("Total Est. Field Energy",  format_energy(E_total)),
+        ]
+        html_rows = "".join(
+            f"<tr><td style='padding:4px 8px 4px 0; color:#aaa; white-space:nowrap'>{lbl}</td>"
+            f"<td style='padding:4px 0 4px 8px; color:#fff; font-weight:bold; word-break:break-word'>{val}</td></tr>"
+            for lbl, val in rows
+        )
+        st.markdown(
+            f"<table style='width:100%; border-collapse:collapse; font-size:0.95em'>{html_rows}</table>",
+            unsafe_allow_html=True
+        )
 
         st.caption(f"χ at position: {chi_at_pos:.5f} | Heuristic transit velocity: {chi_at_pos*100:.3f}% c | m_eff: {m_eff_craft:,.2f} kg")
         st.caption("Energy heuristic: E_field = m·c²·χ² (metric warping) + E_kinetic (m_eff·v²/2). Order-of-magnitude estimate only — not a derived CBQG result.")
@@ -915,10 +984,11 @@ This illustrates the **radar signature** of a CBQG-saturation maneuver — not a
         fig3.frames = demo_frames
         fig3.update_layout(
             updatemenus=[dict(
-                type="buttons", direction="left", showactive=True,
+                type="buttons", direction="left", showactive=False,
+                active=-1,
                 y=-0.20, yanchor="top", x=0.5, xanchor="center",
-                bgcolor='rgba(30,30,50,1)', bordercolor='rgba(100,100,150,1)',
-                font=dict(color='white'), pad={"t": 8, "r": 8},
+                bgcolor='rgba(40,40,80,1)', bordercolor='rgba(120,120,190,1)',
+                font=dict(color='rgba(210,210,255,1)'), pad={"t": 8, "r": 8},
                 buttons=[
                     dict(label="▶ PLAY FLIGHT",
                          method="animate",
