@@ -135,21 +135,16 @@ with t1:
 
         draw_sphere(chi_global)
         
-if st.button("▶ Simulate Universal De-Saturation Cycle"):
-            st.info("Running localized spatial phase expansion...")
-            # Smoothly transition from current global saturation down to vacuum baseline
-            for chi_step in np.linspace(chi_global, 0.01, 20):
-                draw_sphere(chi_step)
-                time.sleep(0.04)
-            
-            # Final Draw: Snap back to the exact Master Control value
-            draw_sphere(chi_global)
-            st.session_state.chi_global = chi_global 
-            st.success("Cycle Complete: Manifold re-stabilized to Master χ.")
+        if st.button("▶ Simulate Universal De-Saturation Cycle"):
+             st.info("Running localized spatial phase expansion...")
+             for chi_step in np.linspace(chi_global, 0.01, 15):
+                 draw_sphere(chi_step)
+                 time.sleep(0.05)
+             draw_sphere(chi_global) # Reset to slider baseline
 
     st.markdown("""
-    ---    
-**The CBQG framework yields five near-term falsifiable predictions:**
+    ---
+    **The CBQG framework yields five near-term falsifiable predictions:**
     I. **UV Spectral Discriminant:** δCBQG ≡ n_t + r/8 ≥ 2 (forbidden by all standard single-field inflationary models).
     II. **Tensor Step Feature:** r(k) exhibits step-function suppression at the saturation scale.
     III. **CMB Alignment:** n_s = 0.964 and r ≈ 0.003, derived from three degrees of freedom, zero fine-tuning.
@@ -370,4 +365,5 @@ with t4:
     st.markdown("**Explanation:** L calculates the true 4D interior mathematical shortcut where w = R * χ. Proves the wormhole shortcut mechanism isn't a metaphor—it's a Pythagorean identity mapping the 4D manifold.")
 
 st.caption("CBQG v10.5.1 © Dr. Anthony Omar Peña, D.O. — All rights reserved.")
+
 
