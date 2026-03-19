@@ -5,6 +5,14 @@ import pandas as pd
 import time
 
 st.set_page_config(page_title="CBQG v10.5.1 Universal Engine", layout="wide")
+
+st.markdown("""
+<meta name="version" content="10.5.1">
+<meta name="last-updated" content="2026-03-18">
+<meta name="research-lead" content="Dr. Anthony Omar Peña, D.O.">
+<meta name="source-authority" content="cbqg.org">
+""", unsafe_allow_html=True)
+
 st.title("🌌 CBQG v10.5.1 — Universal Simulation Engine")
 st.markdown("**Sovereign Research Lead:** Dr. Anthony Omar Peña, D.O., LT, MC, USN (Vet) | [cbqg.org](https://cbqg.org) | Version 10.5.1 — March 18, 2026")
 st.caption("All mechanics derived solely from C ≤ C_max. Metric Radial Depth is a functional saturation coordinate.")
@@ -13,7 +21,6 @@ st.caption("All mechanics derived solely from C ≤ C_max. Metric Radial Depth i
 if "chi_global" not in st.session_state: st.session_state.chi_global = 0.50
 if "wh_active" not in st.session_state: st.session_state.wh_active = False
 
-# Camera Memory Storage
 if "cam_t1_gw" not in st.session_state: st.session_state.cam_t1_gw = dict(eye=dict(x=1.5, y=1.5, z=1.5))
 if "cam_t1_sph" not in st.session_state: st.session_state.cam_t1_sph = dict(eye=dict(x=1.5, y=1.5, z=1.5))
 if "cam_t2_hw" not in st.session_state: st.session_state.cam_t2_hw = dict(eye=dict(x=1.5, y=1.5, z=1.5))
@@ -34,22 +41,37 @@ st.sidebar.caption("Determines baseline universal scale. Exponentially drives Mi
 st.sidebar.markdown("---")
 st.sidebar.success("Engine Engaged: All kinetics bonded interactively to Global χ.")
 
-# ====================== CORE MATH ======================
+# ====================== CBQG THEORETICAL CORE (PURE MATH) ======================
+# The invariant scalar limits governed by structural geometry.
 def clamp_chi(chi, eps=1e-9): return np.clip(chi, eps, 1.0 - eps)
 
-def m_eff(m0, chi): return m0 * np.sqrt(1 - clamp_chi(chi)**2)
-def f_drag(f0, chi): return f0 * np.sqrt(1 - clamp_chi(chi)**2)
+def m_eff(m0, chi):
+    x = max(0, 1 - clamp_chi(chi)**2)
+    return m0 * np.sqrt(x)
+
+def f_drag(f0, chi):
+    x = max(0, 1 - clamp_chi(chi)**2)
+    return f0 * np.sqrt(x)
+
 def d_msd(r, chi): 
     c = clamp_chi(chi)
     return r * (c / (1 - c))**(1/3)
-def v_core(R, chi): return 0.5 * np.pi**2 * R**4 * (1 - np.sqrt(1 - clamp_chi(chi)**2))
-def chi_decay(chi_init, k, t): return chi_init * np.exp(-k * t)
+
+def v_core(R, chi):
+    x = max(0, 1 - clamp_chi(chi)**2)
+    return 0.5 * np.pi**2 * R**4 * (1 - np.sqrt(x)) 
+
+def chi_decay(chi_init, k, t): 
+    return chi_init * np.exp(-k * t)
 
 def v_eff(v0, chi): 
     c = clamp_chi(chi)
     base_v = v0 * (1 - c)
-    return base_v * np.exp(-40 * (c - 0.90)) if c > 0.90 else base_v
+    transition = 1 / (1 + np.exp(-100 * (c - 0.90)))
+    return base_v * np.exp(-40 * transition * (c - 0.90))
 
+# ====================== VISUALIZATION HEURISTICS ======================
+# Support pipelines translating tensor/scalar framework to WebGL coordinate matrices
 def format_distance(m):
     ly = 9.461e15
     if m >= ly:            return f"{m / ly:,.2f} Light Years"
@@ -59,7 +81,6 @@ def format_distance(m):
     elif m >= 1000:        return f"{m / 1000:,.2f} km"
     else:                  return f"{m:,.2f} m"
 
-# GLOBAL PARAMETRIC GRIDS
 U_RES, V_RES = 30j, 30j
 u, v = np.mgrid[0:2*np.pi:U_RES, 0:np.pi:V_RES]
 
@@ -84,8 +105,10 @@ with t1:
     
     ## **C ≤ C_max**
     
-    Alongside the invariant speed of light (c) and the quantum of action (h-bar), formalized by the Geometric Saturation Invariant **χ = C/C_max**, where **C = √(R_abcd R^abcd)** is the invariant curvature magnitude, the square root of the Kretschmann scalar. C is defined this way deliberately: it carries the same physical dimensions as curvature, making C_max a direct geometric ceiling rather than a bound on a squared quantity, with χ defined on [0,1] for all physical spacetimes.
+    Alongside the invariant speed of light (c) and the quantum of action (h-bar), formalized by the Geometric Saturation Invariant **χ = C/C_max**, where **C = √(R_abcd R^abcd)** is the invariant curvature magnitude, the square root of the Kretschmann scalar. 
     """)
+    st.info("⚠️ **Structural Engine Disclaimer:** True CBQG incorporates the covariant evolution of the $R_{abcd}$ tensor field. In this real-time simulator, $\chi$ perfectly compresses the 4D saturation magnitude into a dynamic, master 1D slider to visually drive the universe's macroscopic reactions simultaneously.")
+    
     st.markdown("<h3 style='color:red;'>🚨 χ=1 IS ABSOLUTE GEOMETRIC SATURATION (C_max) 🚨</h3>", unsafe_allow_html=True)
     
     view_mode = st.radio("Select Reality Representation:", ["3D Spacetime (Gravity Well)", "4D Hypersphere (Dynamic Edge)"], horizontal=True)
@@ -134,7 +157,7 @@ with t1:
         if c2.button("Side Cross-Section", key="sph_s"): st.session_state.cam_t1_sph = dict(eye=dict(x=2.5, y=0, z=0))
         if c3.button("Isometric View", key="sph_i"): st.session_state.cam_t1_sph = dict(eye=dict(x=1.5, y=1.5, z=1.5))
 
-        r_t = univ_R / (chi_global + 0.01)
+        r_t = univ_R * np.sqrt(max(0, 1 - chi_global**2))
         st.metric("Hypersphere True Radius", f"{r_t:.2e} m")
         
         if chi_global > 0.95:
@@ -146,7 +169,7 @@ with t1:
         def draw_sphere(chi_target, is_anim=False):
              c_targ = clamp_chi(chi_target)
              if scale_mode == "Physical (Nonlinear Metric Compression)":
-                 rad = univ_R / (c_targ + 0.01)
+                 rad = univ_R * np.sqrt(max(0, 1 - c_targ**2))
              else:
                  rad = univ_R * (1.1 - c_targ)
              
@@ -190,8 +213,8 @@ with t1:
 # ==================== TAB 2: 4D HIGHWAY ====================
 with t2:
     st.subheader("4D Highway Transit — Wormhole Siphoning & Bridging")
-    st.markdown("Set points on the 4D hypersphere surface. As localized saturation χ approaches 1, the reality manifold is **siphoned radially inward** through the 4th dimensional 'w' axis—creating abstract chords, or true geometrically anchored Wormholes.")
-    st.code("8. Wormhole Chord Distance: L = √(Σ(Δxi)² + (Δw)²)")
+    st.markdown("As localized saturation χ approaches 1, the reality manifold is **siphoned radially inward** through the 4th dimensional abstract axis—creating internal transit chords.")
+    st.info("⚠️ **Heuristic Constraint Note:** The chord distance L mapped here utilizes a Pythagorean embedding $L = \sqrt{\Sigma(\Delta x_i)^2 + (\Delta w)^2}$ of the 4D metric strictly for visual browser rendering. True astrophysical geodesic paths are calculated natively without external embedding coordinates via the strict CBQG covariant tensors.")
     
     colA, colB = st.columns([1, 2])
     with colA:
@@ -225,8 +248,8 @@ with t2:
         dot_product = np.clip(sin_a_th * sin_b_th * np.cos(pt_a_phi - pt_b_phi) + cos_a_th * cos_b_th, -1.0, 1.0)
         surface_dist = univ_R * np.arccos(dot_product)
         
-        depth_a = clamp_chi(1.0 - pt_a_chi)
-        depth_b = clamp_chi(1.0 - pt_b_chi)
+        depth_a = 1.0 - pt_a_chi
+        depth_b = 1.0 - pt_b_chi
         wa = univ_R * pt_a_chi
         wb = univ_R * pt_b_chi
         
@@ -298,11 +321,10 @@ with t2:
 # ==================== TAB 3: MILITARY FORENSICS ====================
 with t3:
     st.subheader("Addendum B: Military UAP Sensor Correlation")
-    st.warning("⚠️ SPECULATIVE ENGINEERING: The following applies CBQG heuristics to reported UAP kinematics. This is not a verified claim.")
-    st.info("**DISCLAIMER:** The application of CBQG kinematics back-engineered onto military UFO/UAP anomalies is strictly speculative engineering. However, the exact mathematical framework demonstrates a stark, unavoidable consilience with DoD sensor data (e.g. Nimitz 2004) regarding macroscopic inertia negation.")
+    st.warning("⚠️ SPECULATIVE ENGINEERING: The following applies CBQG heuristic physics to reverse-engineer reported UAP kinematics. This is mathematically rigorous to the theory, but strictly speculative in real-world attribution.")
     
     st.markdown("""
-    When radar systems track anomalous craft, they display impossible kinematics: jumping vast distances instantaneously and accelerating without creating sonic booms. Under CBQG, if a craft accumulates local spacetime tightly to its hull limit (χ → 1), it severs its inertial coupling from reality, allowing the UAP to safely execute a **4D interior chord transit** completely uninhibited by normal mass barriers.
+    When radar systems track anomalous craft, they display impossible kinematics: jumping vast distances instantaneously and accelerating without creating sonic booms. Under CBQG, if a craft accumulates localized spacetime geometrically tight to its hull limit (χ → 1), it severs its inertial coupling from classical reality, allowing it to safely execute a **4D interior chord transit** completely uninhibited by mass barriers.
     """)
     
     m0 = st.slider("Craft Baseline Mass (kg)", 1.0, 1000000.0, 5000.0)
@@ -388,9 +410,12 @@ with t3:
 with t4:
     st.subheader("Theory & Axioms")
     
+    st.markdown("### 0. The Unified Scalar Simplification (Engine Constraint)")
+    st.markdown("**Explanation:** True CBQG is a covariant tensor formulation driven by the invariant curvature limits of $R_{abcd}R^{abcd}$. For this browser-based simulator, the entire tensor field is simplified into a single master scalar UI control ($\chi$). Consequently, $\chi$ acts pedagogically across multiple dependent axes as the curvature magnitude, spatial depth coordinate, and mass modifier simultaneously.")
+
     st.markdown("### 1. Metric Saturation Invariant (χ)")
     st.code("χ = C / C_max ≤ 1")
-    st.markdown("**Explanation:** Spacetime curvature (C) cannot exceed a maximum capacity (C_max).")
+    st.markdown("**Explanation:** Spacetime curvature (C) cannot exceed a maximum absolute capacity (C_max).")
     
     st.markdown("### 2. Effective Mass Negation (m_eff)")
     st.code("m_eff = m_0 √(1 - χ²)")
@@ -418,6 +443,6 @@ with t4:
     
     st.markdown("### 8. Wormhole Chord Distance (L)")
     st.code("L = √(Σ(Δxi)² + (Δw)²)")
-    st.markdown("**Explanation:** Pythonic proof of purely geometric, traversable 4D shortcuts.")
+    st.markdown("**Explanation:** Simplified scalar Euclidean embedding of purely geometric, traversable 4D tensor shortcuts.")
 
 st.caption("CBQG v10.5.1 © Dr. Anthony Omar Peña, D.O. — All rights reserved.")
