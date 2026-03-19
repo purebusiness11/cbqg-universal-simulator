@@ -43,7 +43,7 @@ def format_distance(m):
     elif m >= 1000:        return f"{m / 1000:,.2f} km"
     else:                  return f"{m:,.2f} m"
 
-# ====================== FRAGMENTS FOR SMOOTH ANIMATION ======================
+# ====================== STREAMLIT FRAGMENTS ======================
 
 @st.fragment(run_every=0.05)
 def live_cosmic_engine(chi_val, univ_r):
@@ -60,7 +60,7 @@ def live_cosmic_engine(chi_val, univ_r):
     else:
         st.success("Stable Expansion")
         
-    u, v = np.mgrid[0:2*np.pi:40j, 0:np.pi:40j] 
+    u, v = np.mgrid[0:2*np.pi:30j, 0:np.pi:30j] # Optimized background density
     max_r_possible = univ_r / 0.011 
     
     fig_life = go.Figure(data=go.Surface(
@@ -70,7 +70,7 @@ def live_cosmic_engine(chi_val, univ_r):
         opacity=0.8, colorscale="Plasma"))
         
     fig_life.update_layout(
-        title="Pulsating 4D Hypersphere Lifecycle", height=500,
+        title="Pulsating 4D Hypersphere Lifecycle", height=500, margin=dict(l=0, r=0, b=0, t=40),
         scene=dict(xaxis=dict(range=[-max_r_possible, max_r_possible], title='X (m)'),
                    yaxis=dict(range=[-max_r_possible, max_r_possible], title='Y (m)'),
                    zaxis=dict(range=[-max_r_possible, max_r_possible], title='Z (m)'),
@@ -92,7 +92,7 @@ def live_4d_highway(pt_a_theta, pt_a_phi, pt_a_chi, pt_b_theta, pt_b_phi, pt_b_c
     zb = univ_r * np.cos(pt_b_theta) * depth_b
 
     fig2 = go.Figure()
-    u, v = np.mgrid[0:2*np.pi:30j, 0:np.pi:30j] 
+    u, v = np.mgrid[0:2*np.pi:30j, 0:np.pi:30j] # Optimized density
     x_sph = univ_r * np.cos(u) * np.sin(v)
     y_sph = univ_r * np.sin(u) * np.sin(v)
     z_sph = univ_r * np.cos(v)
@@ -127,7 +127,7 @@ def live_4d_highway(pt_a_theta, pt_a_phi, pt_a_chi, pt_b_theta, pt_b_phi, pt_b_c
         
     fig2.add_trace(go.Scatter3d(x=tx, y=ty, z=tz, mode='lines', line=dict(width=dynamic_width, color=line_color), name=bridge_name))
     
-    # Continuous Pulse / Sine vibration along the bridge
+    # Continuous Pulse Flight
     transit_phase = (t_global * 0.5) % 1.0 
     pos_idx = int(transit_phase * (num_steps - 1))
     
@@ -142,11 +142,10 @@ def live_4d_highway(pt_a_theta, pt_a_phi, pt_a_chi, pt_b_theta, pt_b_phi, pt_b_c
     fig2.add_trace(go.Scatter3d(x=[craft_x], y=[craft_y], z=[craft_z], mode='markers', marker=dict(size=10, color='white', symbol='diamond'), name="Live Transit Pulse"))
 
     fig2.update_layout(
-        title="4D Saturation Bridge — Dynamic Siphoning", height=600, showlegend=True,
+        title="4D Saturation Bridge — Dynamic Siphoning", height=600, showlegend=True, margin=dict(l=0, r=0, b=0, t=40),
         scene=dict(xaxis=dict(showticklabels=False), yaxis=dict(showticklabels=False), zaxis=dict(showticklabels=False)),
     )
     st.plotly_chart(fig2, use_container_width=True)
-
 
 @st.fragment(run_every=0.05)
 def live_military_uap(chi_val):
@@ -161,7 +160,7 @@ def live_military_uap(chi_val):
     fig_wh = go.Figure()
     fig_wh.add_trace(go.Scatter(x=df_wh["Spacetime X"], y=df_wh["Curvature Y"], fill='tozeroy', name="Wormhole Throat Limit", line=dict(color='purple', width=4)))
     fig_wh.add_trace(go.Scatter(x=[wormhole_phase], y=[y_craft], mode='markers', marker=dict(size=25, color='lime', symbol='triangle-down'), name="UAP Craft Trajectory"))
-    fig_wh.update_layout(title="Active UAP Sub-manifold Dive (WORMHOLE THROAT PROJECTION)", xaxis_title="Dimensional Spacing", yaxis_title="Curvature Droop", height=300)
+    fig_wh.update_layout(title="Active UAP Sub-manifold Dive (WORMHOLE THROAT PROJECTION)", xaxis_title="Dimensional Spacing", yaxis_title="Curvature Droop", height=300, margin=dict(l=0, r=0, b=0, t=40))
     st.plotly_chart(fig_wh, use_container_width=True)
 
 # ====================== TABS ======================
@@ -179,22 +178,22 @@ with t1:
     ### **The Third Law of Nature (Axiom):** 
     Infinite information density cannot exist within any finite region of spacetime. The open question is therefore not whether a constraint exists, but which physical mechanism enforces it. **CBQG proposes that spacetime curvature itself is bounded by a maximum value:**
     
-    ## **C ≤ Cₘₐₓ**
+    ## **C ≤ C_max**
     
-    Alongside the invariant speed of light (c) and the quantum of action (ℏ), formalized by the Geometric Saturation Invariant **χ = C/Cₘₐₓ**, where **$C = \sqrt{R_{abcd} R^{abcd}}$** is the invariant curvature magnitude, the square root of the Kretschmann scalar. C is defined this way deliberately: it carries the same physical dimensions as curvature, making $C_{max}$ a direct geometric ceiling rather than a bound on a squared quantity, with $\chi$ defined on [0,1] for all physical spacetimes.
+    Alongside the invariant speed of light (c) and the quantum of action (h-bar), formalized by the Geometric Saturation Invariant **χ = C/C_max**, where **C = √(R_abcd R^abcd)** is the invariant curvature magnitude, the square root of the Kretschmann scalar. C is defined this way deliberately: it carries the same physical dimensions as curvature, making C_max a direct geometric ceiling rather than a bound on a squared quantity, with χ defined on [0,1] for all physical spacetimes.
     
     Where GR predicts divergence, CBQG predicts **χ = 1**, the point of geometric saturation. This curvature ceiling removes classical singularities, preserves unitary evolution, and provides a geometric unification of General Relativity and Quantum Mechanics. Every physically admissible state, gravitational, matter, or gauge, is governed by the Unified Total Constraint:
     
-    `Ĉ_total Ψ = (Σᵢ λᵢ Ĉᵢ†Ĉᵢ) Ψ = 0, with Spec(Ĉᵢ†Ĉᵢ) ≤ Cₘₐₓ`
+    `C_total Ψ = (Σᵢ λᵢ Cᵢ†Cᵢ) Ψ = 0, with Spec(Cᵢ†Cᵢ) ≤ C_max`
     """)
     st.markdown("<h3 style='color:red;'>🚨 χ=1 IS ABSOLUTE GEOMETRIC SATURATION (C_max) 🚨</h3>", unsafe_allow_html=True)
     
     view_mode = st.radio("Select Reality Representation:", ["3D Spacetime (Gravity Well)", "4D Hypersphere (Pulsating)"], horizontal=True)
     
     if view_mode == "3D Spacetime (Gravity Well)":
-        st.write("Visualizing a 3D gravitational well where the depth (curvature) is strictly bounded by $C_{max}$ ($\chi=1$).")
-        x = np.linspace(-5, 5, 80)
-        y = np.linspace(-5, 5, 80)
+        st.write("Visualizing a 3D gravitational well where the depth (curvature) is strictly bounded by C_max (χ=1).")
+        x = np.linspace(-5, 5, 50) # High-density manifold
+        y = np.linspace(-5, 5, 50)
         xx, yy = np.meshgrid(x, y)
         r = np.sqrt(xx**2 + yy**2)
         
@@ -206,7 +205,7 @@ with t1:
         fig3d.add_trace(go.Surface(z=np.full_like(zz, -3.0), x=xx, y=yy, showscale=False, opacity=0.3, colorscale='Reds', name='Absolute Limit (χ=1)', hoverinfo='name', showlegend=True))
         
         fig3d.update_layout(
-            title="3D Spacetime: Curvature bounded horizontally by χ=1 (C_max)", 
+            title="3D Spacetime: Curvature bounded horizontally by χ=1 (C_max)", margin=dict(l=0, r=0, b=0, t=40),
             scene=dict(
                 xaxis_title='X (Space: meters)',
                 yaxis_title='Y (Space: meters)',
@@ -228,11 +227,11 @@ with t1:
     st.markdown("""
     ---
     **The CBQG framework yields five near-term falsifiable predictions:**
-    I. **UV Spectral Discriminant:** δCBQG ≡ nₜ + r/8 ≥ 2 (forbidden by all standard single-field inflationary models, which predict δ = 0 exactly via the Maldacena consistency relation).
-    II. **Tensor Step Feature:** r(k) exhibits step-function suppression at the saturation scale, with infrared and ultraviolet values differing (rᵢᵣ ≠ rᵤᵥ).
-    III. **CMB Alignment:** nₛ = 0.964 and r ≈ 0.003, derived from three degrees of freedom, zero fine-tuning.
-    IV. **Schwarzschild Resolution:** rₘᵢₙ ∝ M^(1/3) ρₘₐₓ^(-1/3), from the Kretschmann scalar, zero free parameters.
-    V. **Dark Energy Dissipation:** Λ(t) = Λ₀/(1 + Λ₀³t/π)^(1/3), with dΛ/dt < 0 structurally required, excluding eternal de Sitter expansion.
+    I. **UV Spectral Discriminant:** δCBQG ≡ n_t + r/8 ≥ 2 (forbidden by all standard single-field inflationary models, which predict δ = 0 exactly via the Maldacena consistency relation).
+    II. **Tensor Step Feature:** r(k) exhibits step-function suppression at the saturation scale, with infrared and ultraviolet values differing (r_ir ≠ r_uv).
+    III. **CMB Alignment:** n_s = 0.964 and r ≈ 0.003, derived from three degrees of freedom, zero fine-tuning.
+    IV. **Schwarzschild Resolution:** r_min ∝ M^(1/3) ρ_max^(-1/3), from the Kretschmann scalar, zero free parameters.
+    V. **Dark Energy Dissipation:** Λ(t) = Λ_0 / (1 + Λ_0³t/π)^(1/3), with dΛ/dt < 0 structurally required, excluding eternal de Sitter expansion.
     
     *Explicit kill-switch:* CBQG fails if δCBQG < 2, or r > 0.01 at 5σ.
     """)
@@ -240,8 +239,9 @@ with t1:
 # ==================== TAB 2: 4D HIGHWAY ====================
 with t2:
     st.subheader("4D Highway Transit — Wormhole Siphoning & Bridging")
-    st.markdown("Set points on the 4D hypersphere surface. As localized saturation `$\chi$` approaches 1, the reality manifold is **siphoned radially inward** through the 4th dimensional '$w$' axis—creating shallow sub-manifold chords, or true geometrically anchored Wormholes.")
-    
+    st.markdown("Set points on the 4D hypersphere surface. As localized saturation χ approaches 1, the reality manifold is **siphoned radially inward** through the 4th dimensional 'w' axis—creating shallow sub-manifold chords, or true geometrically anchored Wormholes.")
+    st.code("8. Wormhole Chord Distance: L = √(Σ(Δxi)² + (Δw)²)")
+    st.caption("Calculates the true 4D interior mathematical shortcut where w = R * χ.")
     colA, colB = st.columns([1, 2])
     with colA:
         st.markdown("### Craft Departure (Point A)")
@@ -283,7 +283,7 @@ with t2:
 
         st.markdown("### ⚡ Transit Efficiency Metrics (Zero Time)")
         st.metric("Surface Distance (S)", f"{format_distance(surface_dist)}")
-        st.metric("Internal Chord Length (L)", f"{format_distance(chord_dist)}")
+        st.metric("Internal Chord Distance (L)", f"{format_distance(chord_dist)}")
         st.metric("🚀 Distance Savings (S - L)", f"{format_distance(dist_saved)}", delta="Saved via Metric Depth")
             
         st.markdown("### Re-entry Constraints")
@@ -303,7 +303,7 @@ with t3:
     st.subheader("Addendum B: Kinematic Sensor Correlation & military UAP Transit")
     st.markdown("""
     **How CBQG Explains Military UAP Sightings (Nimitz, Roosevelt, Malmstrom):**  
-    When military sensors lock onto anomalous craft, they display impossible kinematics: jumping vast distances instantaneously, accelerating without sound, and interfering with nuclear launch infrastructure. Under CBQG, the craft is rapidly accumulating local spacetime to its hull limit ($\chi \\to 1$). In real-time, it severs its inertial coupling from standard spacetime reality allowing the UAP to safely dive into **a 4D interior chord wormhole** completely uninhibited.
+    When military sensors lock onto anomalous craft, they display impossible kinematics: jumping vast distances instantaneously, accelerating without sound, and interfering with nuclear launch infrastructure. Under CBQG, the craft is rapidly accumulating local spacetime to its hull limit (χ → 1). In real-time, it severs its inertial coupling from standard spacetime reality allowing the UAP to safely dive into **a 4D interior chord wormhole** completely uninhibited.
     """)
     
     m0 = st.slider("Craft Baseline Mass (kg)", 1.0, 1000000.0, 5000.0)
@@ -315,9 +315,9 @@ with t3:
     with col1:
         st.markdown("### 1. Instantaneous Acceleration")
         st.markdown("**USS Princeton, 2004 - AN/SPY-1**")
-        st.markdown("*m_eff = m₀ √(1 - χ²)*")
+        st.markdown("*m_eff = m_0 √(1 - χ²)*")
         m_e = m_eff(m0, chi_global)
-        st.info(f"As $\chi \\to 1$, Effective Mass drops to 0. At current Global $\chi={chi_global:.3f}$, **$m_{{eff}} = {m_e:.1f}$ kg**.")
+        st.info(f"As χ → 1, Effective Mass drops to 0. At current Global χ={chi_global:.3f}, **m_eff = {m_e:.1f} kg**.")
         st.progress(max(0.0, min(1.0, 1.0 - m_e/m0)))
 
         st.markdown("### 3. Minimum Standoff (Mirroring)")
@@ -329,20 +329,20 @@ with t3:
     with col2:
         st.markdown("### 2. No Sonic Boom")
         st.markdown("**Nimitz, 2004 - Pilot Testimony**")
-        st.markdown("*F_drag = F₀ √(1 - χ²)*")
+        st.markdown("*F_drag = F_0 √(1 - χ²)*")
         f_d = f_drag(drag_base, chi_global)
         st.info(f"Craft creates a Metric Slipstream. Drag reduces to **{f_d/drag_base*100:.1f}%** of normal. Atmosphere slides through the manifold seamlessly.")
         st.progress(max(0.0, min(1.0, 1.0 - f_d/drag_base)))
         
         st.markdown("### 4. Electromagnetic Damping")
         st.markdown("**Malmstrom AFB, 1967 - Launch Control**")
-        st.markdown("*V_eff = V₀ (1 - χ)*")
+        st.markdown("*V_eff = V_0 (1 - χ)*")
         v_e = v_eff(V_electronics, chi_global)
         st.info(f"Saturation increases vacuum impedance. Missile electronics available voltage drops to **{v_e:.1f} V** (from {V_electronics} V).")
 
     st.markdown("---")
     st.markdown("### 🚀 Real-Time UAP Wormhole Dive (Active Sub-Manifold Sync)")
-    st.markdown(f"At the current global saturation tuning (**$\chi={chi_global:.3f}$**), the craft drops below standard boundaries. Watch the phase shift trace below live.")
+    st.markdown(f"At the current global saturation tuning (**χ={chi_global:.3f}**), the craft drops below standard boundaries. Watch the phase shift trace below live.")
     
     if st.session_state.playing:
         live_military_uap(chi_global)
@@ -353,32 +353,36 @@ with t3:
 with t4:
     st.subheader("Core Axioms (Plain Text) & Explanations")
     
-    st.markdown("### 1. Metric Saturation Invariant ($χ$)")
+    st.markdown("### 1. Metric Saturation Invariant (χ)")
     st.code("χ = C / C_max ≤ 1")
-    st.markdown("**Explanation:** The foundational bedrock of the universe. Spacetime curvature ($C$) cannot exceed a maximum absolute capacity ($C_{max}$). $\chi$ simply tracks what percentage of that capacity is currently exhausted.")
+    st.markdown("**Explanation:** The foundational bedrock of the universe. Spacetime curvature (C) cannot exceed a maximum absolute capacity (C_max). χ simply tracks what percentage of that capacity is currently exhausted.")
     
-    st.markdown("### 2. Effective Mass Negation ($m_{eff}$)")
-    st.code("m_eff = m₀ √(1 - χ²)")
-    st.markdown("**Explanation:** As a craft saturates the vacuum matrix around its hull ($\chi \\to 1$), its inertial connection to the universe evaporates to absolute zero, permitting infinite velocity vectors with zero force.")
+    st.markdown("### 2. Effective Mass Negation (m_eff)")
+    st.code("m_eff = m_0 √(1 - χ²)")
+    st.markdown("**Explanation:** As a craft saturates the vacuum matrix around its hull (χ → 1), its inertial connection to the universe evaporates to absolute zero, permitting infinite velocity vectors with zero force.")
 
-    st.markdown("### 3. Aerodynamic Drag Suppression ($F_{drag}$)")
-    st.code("F_drag = F₀ √(1 - χ²)")
+    st.markdown("### 3. Aerodynamic Drag Suppression (F_drag)")
+    st.code("F_drag = F_0 √(1 - χ²)")
     st.markdown("**Explanation:** As inertia disappears, so does standard fluid interaction. The atmosphere doesn't compress—it slides harmlessly around the saturated boundaries of the hull, instantly stopping sonic booms and super-heating friction.")
 
-    st.markdown("### 4. Minimum Standoff Distance ($D_{msd}$)")
+    st.markdown("### 4. Minimum Standoff Distance (D_msd)")
     st.code("D_msd = R [χ / (1 - χ)]^(1/3)")
-    st.markdown("**Explanation:** Standard mass (like military jets) breaking into this minimum spatial radius risks bleeding off the saturated energy. A severe kinetic repulsion barrier forms as $\chi$ scales upward.")
+    st.markdown("**Explanation:** Standard mass (like military jets) breaking into this minimum spatial radius risks bleeding off the saturated energy. A severe kinetic repulsion barrier forms as χ scales upward.")
 
-    st.markdown("### 5. Electromagnetic Damping ($V_{eff}$)")
-    st.code("V_eff = V₀ (1 - χ)")
+    st.markdown("### 5. Electromagnetic Damping (V_eff)")
+    st.code("V_eff = V_0 (1 - χ)")
     st.markdown("**Explanation:** Passing electrons fail to jump the vacuum gap. As saturation peaks, the local impedance scales up, bleeding active voltage out of surrounding electronics and shutting them down gracefully.")
 
-    st.markdown("### 6. 4D Highway Volume ($V_{core}$)")
+    st.markdown("### 6. 4D Highway Volume (V_core)")
     st.code("V_core = 0.5 π² R⁴ (1 - √(1 - χ²))")
     st.markdown("**Explanation:** Defines exactly what fractional volume of the inner 4D hypersphere is safely traversable by highly saturated fleets simultaneously without crossing phase lanes.")
 
-    st.markdown("### 7. Harmonic Re-entry Decay ($χ(t)$)")
+    st.markdown("### 7. Harmonic Re-entry Decay (χ_t)")
     st.code("χ(t) = χ_init e^(-kt)")
-    st.markdown("**Explanation:** Dumping saturation from 1 to 0 instantly would kill the crew via \"Whiplash\" as their full infinite inertia slammed back onto them. Modulating decay over a safe envelope $k$ acts as inertial shock absorbers.")
+    st.markdown("**Explanation:** Dumping saturation from 1 to 0 instantly would kill the crew via \"Whiplash\" as their full infinite inertia slammed back onto them. Modulating decay over a safe envelope k acts as inertial shock absorbers.")
+    
+    st.markdown("### 8. Wormhole Chord Distance (L)")
+    st.code("L = √(Σ(Δxi)² + (Δw)²)")
+    st.markdown("**Explanation:** L calculates the true 4D interior mathematical shortcut where w = R * χ. Proves the wormhole shortcut mechanism isn't a metaphor—it's a Pythagorean identity mapping the 4D manifold.")
 
 st.caption("CBQG v10.5.1 © Dr. Anthony Omar Peña, D.O. — All rights reserved.")
