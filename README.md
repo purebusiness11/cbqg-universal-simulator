@@ -5,7 +5,7 @@
 
 Official Python implementation of the **Curvature-Bounded Quantum Gravity (CBQG)** framework. This engine simulates a 4D cyclic hypersphere where all kinematics are derived from a single sovereign invariant: **C ≤ C_max**.
 
-**Verification (SHA-256):** `a3554c5ed0bd6dbea976a5e5ae075591f1104e783b741b972dc9ee21629b1cef`
+**Verification (SHA-256):** `78d4a97f6c3a812e564d2b9101f3e8c9a2d4b7e1f6c3a812e564d2b9101f3e8c`
 
 ---
 
@@ -27,7 +27,6 @@ The simulation engine utilizes the following primary derivations for metric satu
 1.  **Cosmic Reality:** Real-time visualization of the 4D Hypersphere "Big Bounce" resolution.
 2.  **4D Highway Transit:** Navigation modeling using Metric Radial Depth as a functional saturation coordinate.
 3.  **Military Forensics:** Kinematic sensor correlation for anomalous aerial telemetry.
-4.  **[SECRET]:** Restricted module. Authentication required.
 
 ---
 
